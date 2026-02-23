@@ -114,9 +114,8 @@ export class Printer {
 	private clear(): void {
 		if (!this.isInteractive || this.linesRendered === 0) return;
 
-		for (let i = 0; i < this.linesRendered; i++) {
-			process.stdout.write(`${ESC}[1A${ESC}[2K\r`);
-		}
+		const clearSequence = `${ESC}[1A${ESC}[2K\r`.repeat(this.linesRendered);
+		process.stdout.write(clearSequence);
 		this.linesRendered = 0;
 	}
 

@@ -92,7 +92,31 @@ describe("Printer & Layout", () => {
 		const printer = new Printer({ interactive: true });
 		printer.print([{ segments: [{ text: "L1", style: "" }] }]);
 		printer.print([{ segments: [{ text: "L2", style: "" }] }]);
-		expect(stdoutSpy).toHaveBeenCalledWith("\x1b[1A\x1b[2K\r");
+		// Verify it clears the previous line
+		expect(stdoutSpy).toHaveBeenCalledWith(expect.stringContaining("\x1b[1A\x1b[2K\r"));
+	});
+
+	test("Printer optimizes clearing of multiple lines", () => {
+		const printer = new Printer({ interactive: true });
+		// First print: 3 lines
+		printer.print([
+			{ segments: [{ text: "L1", style: "" }] },
+			{ segments: [{ text: "L2", style: "" }] },
+			{ segments: [{ text: "L3", style: "" }] }
+		]);
+
+		stdoutSpy.mockClear();
+
+		// Second print: should clear 3 lines
+		printer.print([{ segments: [{ text: "New", style: "" }] }]);
+
+		// Verify that we clear 3 lines in a single write call (optimization)
+		// expected sequence: UP + CLEAR_LINE + CR repeated 3 times
+		const clearSeq = "\x1b[1A\x1b[2K\r";
+		const expectedClear = clearSeq.repeat(3);
+
+		// The first call should be the clearing sequence
+		expect(stdoutSpy.mock.calls[0][0]).toBe(expectedClear);
 	});
 
 	test("printDualColumn executes correctly", () => {
