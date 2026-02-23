@@ -45,7 +45,7 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
 /**
  * Converts RGB to a 24-bit ANSI foreground color escape sequence.
  */
-export function rgbToHex(r: number, g: number, b: number): string {
+export function rgbToAnsi(r: number, g: number, b: number): string {
 	return `${ESC}[38;2;${r};${g};${b}m`;
 }
 
@@ -59,7 +59,7 @@ export function interpolateColor(color1: string, color2: string, factor: number)
 	const r = Math.round(c1.r + f * (c2.r - c1.r));
 	const g = Math.round(c1.g + f * (c2.g - c1.g));
 	const b = Math.round(c1.b + f * (c2.b - c1.b));
-	return rgbToHex(r, g, b);
+	return rgbToAnsi(r, g, b);
 }
 
 // -----------------
