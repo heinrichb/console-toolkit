@@ -115,8 +115,10 @@ describe("Printer & Layout", () => {
 		const clearSeq = "\x1b[1A\x1b[2K\r";
 		const expectedClear = clearSeq.repeat(3);
 
-		// The first call should be the clearing sequence
-		expect(stdoutSpy.mock.calls[0][0]).toBe(expectedClear);
+		// The call should contain the clearing sequence at the start
+		expect(stdoutSpy).toHaveBeenCalledTimes(1);
+		const callArg = stdoutSpy.mock.calls[0][0] as string;
+		expect(callArg.startsWith(expectedClear)).toBe(true);
 	});
 
 	test("printDualColumn executes correctly", () => {
