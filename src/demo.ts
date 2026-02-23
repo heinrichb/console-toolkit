@@ -1,19 +1,27 @@
-import { printDualColumn, getDragonLines, Printer, interpolateColor, StyledLine, RESET } from "./index";
+import { printDualColumn, getDragonLines, Printer, interpolateColor, StyledLine, RESET, hexToRgb, rgbToAnsi } from "./index";
+import pkg from "../package.json";
 
 /**
  * Run this demo to visually verify terminal output:
  * bun run src/demo.ts
  */
 
+const BOLD = "\x1b[1m";
+
+function hex(color: string): string {
+	const { r, g, b } = hexToRgb(color);
+	return rgbToAnsi(r, g, b);
+}
+
 export async function runDemo() {
 	console.clear();
 
 	// 1. Test Static Dual Column Print
 	console.log("--- Static Dual Column Demo ---");
-	const purple = "\x1b[38;2;167;139;250m\x1b[1m";
-	const blue = "\x1b[38;2;96;165;250m";
-	const green = "\x1b[38;2;52;211;153m";
-	const yellow = "\x1b[38;2;251;191;36m";
+	const purple = hex("#A78BFA") + BOLD;
+	const blue = hex("#60A5FA");
+	const green = hex("#34D399");
+	const yellow = hex("#FBBF24");
 
 	const leftContent: StyledLine[] = [
 		{ segments: [{ text: "Package:", style: purple }] },
@@ -22,8 +30,8 @@ export async function runDemo() {
 	];
 
 	const rightContent: StyledLine[] = [
-		{ segments: [{ text: "@heinrichb/console-toolkit", style: blue }] },
-		{ segments: [{ text: "1.0.0", style: green }] },
+		{ segments: [{ text: pkg.name, style: blue }] },
+		{ segments: [{ text: pkg.version, style: green }] },
 		{ segments: [{ text: "Testing live output...", style: yellow }] }
 	];
 
@@ -40,7 +48,7 @@ export async function runDemo() {
 	// 3. Test Interactive Re-rendering
 	console.log("--- Interactive Re-rendering Demo ---");
 	const interactivePrinter = new Printer({ interactive: true });
-	const gray = "\x1b[38;2;75;85;99m";
+	const gray = hex("#4B5563");
 
 	for (let i = 0; i <= 100; i += 5) {
 		const progressColor = interpolateColor("#3B82F6", "#10B981", i / 100);
@@ -54,7 +62,7 @@ export async function runDemo() {
 					{ text: "[", style: gray },
 					{ text: "█".repeat(filled), style: progressColor },
 					{ text: "░".repeat(barWidth - filled), style: gray },
-					{ text: `] ${i}%`, style: progressColor + "\x1b[1m" }
+					{ text: `] ${i}%`, style: progressColor + BOLD }
 				]
 			}
 		];
