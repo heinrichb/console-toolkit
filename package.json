@@ -13,9 +13,9 @@
 		"dist"
 	],
 	"scripts": {
-		"demo": "bun run src/demo.ts",
-		"test": "bun run build && bun test",
-		"test:coverage": "bun run build && bun test --coverage --coverage-threshold=100",
+		"demo": "bun run scripts/run-demo.ts",
+		"test": "bun run build && bun test src",
+		"test:coverage": "bun run build && bun test src --coverage --coverage-threshold=100",
 		"build": "bun x tsc",
 		"publish": "npm publish",
 		"format:check": "prettier --check \"src/**/*.{ts,json,md}\"",
@@ -33,11 +33,12 @@
 		"useTabs": true
 	},
 	"devDependencies": {
+		"@eslint/js": "^9.0.0",
 		"@types/bun": "latest",
-		"@typescript-eslint/eslint-plugin": "^8.0.0",
-		"@typescript-eslint/parser": "^8.0.0",
 		"eslint": "^9.0.0",
+		"eslint-config-prettier": "^10.1.8",
 		"prettier": "^3.5.3",
-		"typescript": "^5"
+		"typescript": "^5",
+		"typescript-eslint": "^8.56.1"
 	}
 }
