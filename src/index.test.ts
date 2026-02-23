@@ -1,7 +1,7 @@
 import { expect, test, describe, spyOn, afterEach } from "bun:test";
 import {
 	hexToRgb,
-	rgbToHex,
+	rgbToAnsi,
 	interpolateColor,
 	getLineLength,
 	computeMaxWidth,
@@ -26,9 +26,9 @@ describe("Color Utilities", () => {
 		expect(() => hexToRgb("#FFF")).toThrow("Invalid hex color.");
 	});
 
-	test("rgbToHex converts correctly", () => {
-		expect(rgbToHex(255, 255, 255)).toBe("\x1b[38;2;255;255;255m");
-		expect(rgbToHex(0, 0, 0)).toBe("\x1b[38;2;0;0;0m");
+	test("rgbToAnsi converts correctly", () => {
+		expect(rgbToAnsi(255, 255, 255)).toBe("\x1b[38;2;255;255;255m");
+		expect(rgbToAnsi(0, 0, 0)).toBe("\x1b[38;2;0;0;0m");
 	});
 
 	test("interpolateColor finds the midpoint", () => {
