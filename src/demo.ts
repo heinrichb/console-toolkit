@@ -65,7 +65,3 @@ export async function runDemo() {
 
 	console.log("\n✨ Demo Complete!");
 }
-
-if (import.meta.path === Bun.main) {
-	runDemo().catch(console.error);
-}

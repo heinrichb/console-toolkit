@@ -75,7 +75,7 @@ describe("Line Utilities", () => {
 
 describe("Printer & Layout", () => {
 	const stdoutSpy = spyOn(process.stdout, "write").mockImplementation(() => true);
-	const logSpy = spyOn(console, "log").mockImplementation(() => {});
+	const logSpy = spyOn(console, "log").mockImplementation(() => undefined);
 
 	afterEach(() => {
 		stdoutSpy.mockClear();
