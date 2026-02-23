@@ -27,19 +27,19 @@ describe("Color Utilities", () => {
 	});
 
 	test("rgbToHex converts correctly", () => {
-		expect(rgbToHex(255, 255, 255)).toBe("#ffffff");
-		expect(rgbToHex(0, 0, 0)).toBe("#000000");
+		expect(rgbToHex(255, 255, 255)).toBe("\x1b[38;2;255;255;255m");
+		expect(rgbToHex(0, 0, 0)).toBe("\x1b[38;2;0;0;0m");
 	});
 
 	test("interpolateColor finds the midpoint", () => {
 		const start = "#000000";
 		const end = "#ffffff";
-		expect(interpolateColor(start, end, 0.5)).toBe("#808080");
+		expect(interpolateColor(start, end, 0.5)).toBe("\x1b[38;2;128;128;128m");
 	});
 
 	test("interpolateColor clamps factors", () => {
-		expect(interpolateColor("#000000", "#ffffff", -1)).toBe("#000000");
-		expect(interpolateColor("#000000", "#ffffff", 2)).toBe("#ffffff");
+		expect(interpolateColor("#000000", "#ffffff", -1)).toBe("\x1b[38;2;0;0;0m");
+		expect(interpolateColor("#000000", "#ffffff", 2)).toBe("\x1b[38;2;255;255;255m");
 	});
 });
 
@@ -85,7 +85,7 @@ describe("Printer & Layout", () => {
 	test("Printer.print outputs to console", () => {
 		const printer = new Printer();
 		printer.print([{ segments: [{ text: "Test", style: "color: red" }] }]);
-		expect(logSpy).toHaveBeenCalled();
+		expect(stdoutSpy).toHaveBeenCalled();
 	});
 
 	test("Printer handles interactive clearing", () => {
@@ -97,7 +97,7 @@ describe("Printer & Layout", () => {
 
 	test("printDualColumn executes correctly", () => {
 		printDualColumn([lineA], [lineB]);
-		expect(logSpy).toHaveBeenCalled();
+		expect(stdoutSpy).toHaveBeenCalled();
 	});
 
 	test("getDragonLines returns valid array", () => {
