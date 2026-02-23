@@ -109,22 +109,18 @@ export class Printer {
 	}
 
 	/**
-	 * Moves cursor and clears previously rendered lines in interactive mode.
+	 * Generates the clear sequence to move cursor and clear previously rendered lines.
 	 */
-	private clear(): void {
-		if (!this.isInteractive || this.linesRendered === 0) return;
-
-		const clearSequence = `${ESC}[1A${ESC}[2K\r`.repeat(this.linesRendered);
-		process.stdout.write(clearSequence);
-		this.linesRendered = 0;
+	private getClearSequence(): string {
+		if (!this.isInteractive || this.linesRendered === 0) return "";
+		return `${ESC}[1A${ESC}[2K\r`.repeat(this.linesRendered);
 	}
 
 	/**
 	 * Renders an array of StyledLines to the standard output.
 	 */
 	public print(lines: StyledLine[]): void {
-		this.clear();
-		let output = "";
+		let output = this.getClearSequence();
 		lines.forEach((line) => {
 			line.segments.forEach((seg) => {
 				output += `${seg.style}${seg.text}${RESET}`;
