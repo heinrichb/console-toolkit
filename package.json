@@ -14,8 +14,8 @@
 	],
 	"scripts": {
 		"demo": "bun run src/demo.ts",
-		"test": "bun test",
-		"test:coverage": "bun test --coverage --coverage-threshold=100",
+		"test": "bun run build && bun test",
+		"test:coverage": "bun run build && bun test --coverage --coverage-threshold=100",
 		"build": "bun x tsc",
 		"publish": "npm publish",
 		"format:check": "prettier --check \"src/**/*.{ts,json,md}\"",
