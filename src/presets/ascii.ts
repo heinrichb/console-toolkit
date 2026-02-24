@@ -8,7 +8,7 @@ import { interpolateColor } from "../core/style";
 /**
  * Returns the classic Dragon ASCII art as PrintLines with a vertical color gradient.
  */
-export function getDragonLines(startColor: Color = "#EF4444", endColor: Color = "#F59E0B"): PrintLine[] {
+export function getDragon(startColor: Color = "#EF4444", endColor: Color = "#F59E0B"): PrintLine[] {
 	const rawDragon = [
 		"                ^    ^",
 		"               / \\  //\\",

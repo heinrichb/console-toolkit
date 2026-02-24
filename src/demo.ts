@@ -1,4 +1,4 @@
-import { printColumns, getDragonLines, Printer, interpolateColor, createProgressBar, Spinner, SPINNERS } from "./index";
+import { printColumns, getDragon, Printer, interpolateColor, createProgressBar, Spinner, SPINNERS } from "./index";
 import { PrintLine, PrintStyle, HexColor } from "./core/types";
 import pkg from "../package.json";
 
@@ -43,7 +43,7 @@ export async function runDemo() {
 	console.log("\n");
 
 	// 2. Block Vertical Gradient Demo
-	console.log("--- Block Vertical Gradient Demo (New Feature) ---");
+	console.log("--- Block Vertical Gradient Demo ---");
 	// This demonstrates applying a gradient to a block of lines.
 	// The lines inherit the gradient color based on their vertical position.
 	const gradientBlockLines: PrintLine[] = Array.from({ length: 10 }, (_, i) => ({
@@ -58,7 +58,7 @@ export async function runDemo() {
 
 	// 3. Dragon Gradient Preset
 	console.log("--- Dragon Gradient Preset ---");
-	const dragon = getDragonLines("#EF4444", "#FDE047");
+	const dragon = getDragon("#EF4444", "#FDE047");
 	staticPrinter.print({ lines: dragon });
 	console.log("\n");
 
@@ -150,7 +150,7 @@ export async function runDemo() {
 	console.log("--- Style Codes Demo ---");
 
 	const styles: { name: string; style?: PrintStyle }[] = [
-		{ name: "Default", style: undefined },
+		{ name: "Default" },
 		{ name: "Bold + Red", style: { modifiers: ["bold"], color: "red" } },
 		{ name: "Bold", style: { modifiers: ["bold"] } },
 		{ name: "Dim", style: { modifiers: ["dim"] } },
