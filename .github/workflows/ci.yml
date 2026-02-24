@@ -25,7 +25,10 @@ jobs:
             - name: Linting Check
               run: bun run lint
 
-            - name: Type Check & Build
+            - name: Type Check
+              run: bun run typecheck
+
+            - name: Build
               run: bun run build
 
             - name: Run Unit Tests with 100% Coverage

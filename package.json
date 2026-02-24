@@ -1,6 +1,6 @@
 {
 	"name": "@heinrichb/console-toolkit",
-	"version": "1.0.6",
+	"version": "1.0.8",
 	"description": "A versatile TypeScript utility library for enhanced console logging, formatting, and layout management.",
 	"type": "module",
 	"main": "./dist/index.js",
@@ -14,10 +14,10 @@
 	],
 	"scripts": {
 		"demo": "bun run scripts/run-demo.ts",
-		"test": "bun run build && bun test src",
-		"test:coverage": "bun run build && bun test src --coverage --coverage-threshold=100",
-		"build": "bun x tsc",
-		"publish": "npm publish",
+		"test": "bun test src",
+		"test:coverage": "bun test src --coverage --coverage-threshold=100",
+		"build": "bun run scripts/build.ts",
+		"typecheck": "bun x tsc --noEmit",
 		"format:check": "prettier --check \"src/**/*.{ts,json,md}\"",
 		"format:write": "prettier --write \"src/**/*.{ts,json,md}\"",
 		"lint": "eslint \"src/**/*.ts\"",
@@ -38,7 +38,6 @@
 		"eslint": "^10.0.2",
 		"eslint-config-prettier": "^10.1.8",
 		"globals": "^17.3.0",
-		"jiti": "^2.6.1",
 		"prettier": "^3.8.1",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.56.1"
