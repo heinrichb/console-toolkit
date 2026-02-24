@@ -1,10 +1,28 @@
 /**
  * Core types for styled console output.
  */
+
+// -----------------
+// Style Types
+// -----------------
+
+export type StandardColor = "black" | "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "gray" | "grey"; // Support both spellings
+
+export type StyleModifier = "bold" | "dim" | "italic" | "underline" | "reset" | "hidden" | "inverse" | "strikethrough";
+
+export type HexColor = `#${string}`;
+
+/**
+ * A style can be a standard color name, a hex color string, or a style modifier.
+ * It can also be a raw ANSI string (though discouraged) for backward compatibility or special cases.
+ */
+// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
+export type Style = StandardColor | StyleModifier | HexColor | string;
+
 export interface StyledSegment {
 	text: string;
-	/** ANSI escape sequence or terminal-compatible style string */
-	style: string;
+	/** Style or array of styles to apply to the text */
+	style: Style | Style[];
 }
 
 export interface StyledLine {
@@ -17,8 +35,8 @@ export interface StyledLine {
 export interface PrinterOptions {
 	/** If true, the printer will overwrite previous lines instead of appending new ones. */
 	interactive?: boolean;
-	/** The default ANSI style to apply to padding or separators. */
-	defaultStyle?: string;
+	/** The default style to apply to padding or separators. */
+	defaultStyle?: Style | Style[];
 }
 
 // -----------------
@@ -58,16 +76,81 @@ export function hexToAnsi(hex: string): string {
 }
 
 /**
- * Interpolates between two hex colors based on a factor (0 to 1) and returns an ANSI escape sequence.
+ * Converts a single RGB component to a 2-digit hex string.
  */
-export function interpolateColor(color1: string, color2: string, factor: number): string {
+function toHex(c: number): string {
+	const hex = Math.max(0, Math.min(255, Math.round(c))).toString(16);
+	return hex.length === 1 ? "0" + hex : hex;
+}
+
+/**
+ * Interpolates between two hex colors based on a factor (0 to 1) and returns a Hex color string.
+ */
+export function interpolateColor(color1: string, color2: string, factor: number): HexColor {
 	const f = Math.max(0, Math.min(1, factor));
 	const c1 = hexToRgb(color1);
 	const c2 = hexToRgb(color2);
-	const r = Math.round(c1.r + f * (c2.r - c1.r));
-	const g = Math.round(c1.g + f * (c2.g - c1.g));
-	const b = Math.round(c1.b + f * (c2.b - c1.b));
-	return rgbToAnsi(r, g, b);
+	const r = c1.r + f * (c2.r - c1.r);
+	const g = c1.g + f * (c2.g - c1.g);
+	const b = c1.b + f * (c2.b - c1.b);
+	return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+// -----------------
+// Style Resolution
+// -----------------
+
+const STYLE_CODES: Record<string, string> = {
+	reset: "0",
+	bold: "1",
+	dim: "2",
+	italic: "3",
+	underline: "4",
+	inverse: "7",
+	hidden: "8",
+	strikethrough: "9",
+	black: "30",
+	red: "31",
+	green: "32",
+	yellow: "33",
+	blue: "34",
+	magenta: "35",
+	cyan: "36",
+	white: "37",
+	gray: "90",
+	grey: "90"
+};
+
+/**
+ * Resolves a single Style or array of Styles into an ANSI escape sequence.
+ */
+export function resolveStyle(style: Style | Style[]): string {
+	if (Array.isArray(style)) {
+		return style.map(resolveStyle).join("");
+	}
+
+	if (typeof style !== "string") {
+		return "";
+	}
+
+	// Check for hex color
+	if (style.startsWith("#")) {
+		try {
+			return hexToAnsi(style);
+		} catch {
+			return ""; // Invalid hex, ignore
+		}
+	}
+
+	// Check for standard styles/colors
+	const code = STYLE_CODES[style.toLowerCase()];
+	if (code) {
+		return `${ESC}[${code}m`;
+	}
+
+	// Fallback: return as raw string if it looks like ANSI or just text
+	// Ideally we would validate ANSI here, but for flexibility we return it.
+	return style;
 }
 
 // -----------------
@@ -91,7 +174,7 @@ export function computeMaxWidth(lines: StyledLine[]): number {
 /**
  * Pads a StyledLine to a target width by adding an empty segment at the end.
  */
-export function padLine(line: StyledLine, targetWidth: number, padStyle: string): StyledLine {
+export function padLine(line: StyledLine, targetWidth: number, padStyle: Style | Style[]): StyledLine {
 	const currentLength = getLineLength(line);
 	if (currentLength < targetWidth) {
 		return {
@@ -131,7 +214,8 @@ export class Printer {
 		let output = this.getClearSequence();
 		lines.forEach((line) => {
 			line.segments.forEach((seg) => {
-				output += `${seg.style}${seg.text}${RESET}`;
+				const ansiStyle = resolveStyle(seg.style);
+				output += `${ansiStyle}${seg.text}${RESET}`;
 			});
 			output += "\n";
 		});
@@ -154,7 +238,7 @@ export function mergeColumns(
 	rightColumn: StyledLine[],
 	leftWidth: number,
 	separator: string,
-	defaultStyle: string
+	defaultStyle: Style | Style[]
 ): StyledLine[] {
 	const maxLines = Math.max(leftColumn.length, rightColumn.length);
 	const output: StyledLine[] = [];
@@ -218,3 +302,9 @@ export function getDragonLines(startColor = "#EF4444", endColor = "#F59E0B"): St
 		return { segments: [{ text, style: colorStyle }] };
 	});
 }
+
+// -----------------
+// Progress Bar
+// -----------------
+
+export * from "./progress";

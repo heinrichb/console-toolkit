@@ -21,6 +21,7 @@ This file contains the core principles, workflows, and standards for working on 
 
 ### Project Specifics
 * **Tech Debt:** Track major upgrades, missing coverage, or long-term refactors in `TODO.md`.
+* **Demo Script:** The `src/demo.ts` script must demonstrate *all* capabilities of the library and be kept up-to-date with every feature addition or change.
 
 ## 3. Testing & Verification
 
