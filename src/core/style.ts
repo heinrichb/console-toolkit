@@ -12,7 +12,7 @@ export const RESET = `${ESC}[0m`;
 
 const STANDARD_COLORS: Record<StandardColor, string> = {
 	black: "#000000",
-	red: "#EF4444", // Tailwind Red-500 equivalent for better look
+	red: "#EF4444", // Tailwind Red-500
 	green: "#10B981", // Tailwind Emerald-500
 	yellow: "#F59E0B", // Tailwind Amber-500
 	blue: "#3B82F6", // Tailwind Blue-500
