@@ -31,7 +31,7 @@ export type Style = StandardColor | StyleModifier | HexColor | string;
 export interface StyledSegment {
 	text: string;
 	/** Style or array of styles to apply to the text */
-	style: Style | Style[];
+	style?: Style | Style[];
 }
 
 export interface StyledLine {
@@ -134,7 +134,7 @@ const STYLE_CODES: Record<string, string> = {
 /**
  * Resolves a single Style or array of Styles into an ANSI escape sequence.
  */
-export function resolveStyle(style: Style | Style[]): string {
+export function resolveStyle(style?: Style | Style[]): string {
 	if (Array.isArray(style)) {
 		return style.map(resolveStyle).join("");
 	}
@@ -318,3 +318,4 @@ export function getDragonLines(startColor = "#EF4444", endColor = "#F59E0B"): St
 // -----------------
 
 export * from "./progress";
+export * from "./spinner";
