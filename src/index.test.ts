@@ -71,6 +71,10 @@ describe("Style Resolution", () => {
 		expect(resolveStyle(["bold", "red"])).toBe("\x1b[1m\x1b[31m");
 	});
 
+	test("resolveStyle handles undefined style", () => {
+		expect(resolveStyle(undefined)).toBe("");
+	});
+
 	test("resolveStyle passes through raw strings", () => {
 		const raw = "\x1b[31m";
 		expect(resolveStyle(raw)).toBe(raw);
@@ -167,6 +171,20 @@ describe("Printer & Layout", () => {
 		const output = stdoutSpy.mock.calls[0][0] as string;
 		expect(output).toContain("Hello");
 		expect(output).toContain("World!!");
+	});
+
+	test("printColumns handles undefined style in segments", () => {
+		const lineNoStyle: StyledLine = { segments: [{ text: "NoStyle" }] };
+		printColumns([[lineNoStyle]]);
+
+		expect(stdoutSpy).toHaveBeenCalled();
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("NoStyle");
+	});
+
+	test("printColumns handles empty columns", () => {
+		printColumns([]);
+		expect(stdoutSpy).toHaveBeenCalled(); // Should clear lines if interactive, or do nothing.
 	});
 
 	test("printColumns handles 3 columns", () => {

@@ -193,7 +193,8 @@ export async function runDemo() {
 	console.log("--- Style Codes Demo ---");
 
 	const styles = [
-		{ name: "Default", style: [] },
+		{ name: "Default", style: undefined },
+		{ name: "Bold + Red", style: ["bold", "red"] },
 		{ name: "Bold", style: "bold" },
 		{ name: "Dim", style: "dim" },
 		{ name: "Italic", style: "italic" },
@@ -213,10 +214,7 @@ export async function runDemo() {
 	];
 
 	const styleLines: StyledLine[] = styles.map((s) => ({
-		segments: [
-			{ text: s.name.padEnd(15), style: [] },
-			{ text: "Sample Text", style: s.style }
-		]
+		segments: [{ text: s.name.padEnd(15) }, { text: "Sample Text", style: s.style }]
 	}));
 
 	staticPrinter.print(styleLines);

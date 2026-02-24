@@ -14,15 +14,7 @@ export type StandardColor = "black" | "red" | "green" | "yellow" | "blue" | "mag
 /**
  * Text style modifiers.
  */
-export type StyleModifier =
-	| "bold"
-	| "dim"
-	| "italic"
-	| "underline"
-	| "default"
-	| "hidden"
-	| "inverse"
-	| "strikethrough";
+export type StyleModifier = "bold" | "dim" | "italic" | "underline" | "default" | "hidden" | "inverse" | "strikethrough";
 
 /**
  * A valid Hex color string (e.g., "#FF0000").
