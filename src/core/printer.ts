@@ -75,8 +75,7 @@ export class Printer {
 			const colors = blockStyle.color;
 			const factor = lineIndex / (totalLines - 1);
 
-			// Interpolate manually to get a Hex Color (not ANSI)
-			// Logic matches getGradientColor but returns Hex
+			// Interpolate manually to obtain Hex Color
 			const f = Math.max(0, Math.min(1, factor));
 			const segmentLength = 1 / (colors.length - 1);
 			const segmentIndex = Math.min(Math.floor(f / segmentLength), colors.length - 2);
