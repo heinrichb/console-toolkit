@@ -116,7 +116,7 @@ export async function runDemo() {
 	// 5. Spinners Demo
 	console.log("--- Spinners Demo ---");
 
-	const spinnerTypes = Object.keys(SPINNERS) as Array<keyof typeof SPINNERS>;
+	const spinnerTypes = Object.keys(SPINNERS) as (keyof typeof SPINNERS)[];
 	const spinners = spinnerTypes.map((type) => ({
 		type,
 		instance: new Spinner({ frames: SPINNERS[type], interval: 80 })
