@@ -1,8 +1,8 @@
 import { expect, test, describe } from "bun:test";
 import { createProgressBar } from "./progress";
-import { StyledLine } from "../core/types";
+import { PrintLine } from "../core/types";
 
-function getText(line: StyledLine): string {
+function getText(line: PrintLine): string {
 	return line.segments.map((s) => s.text).join("");
 }
 
@@ -11,6 +11,7 @@ describe("createProgressBar", () => {
 		const line = createProgressBar({ progress: 0 });
 		const text = getText(line);
 
+		// Default format: [░░░░░░░░░░░░░░░░░░░░] 0%
 		expect(text).toContain("[");
 		expect(text).toContain("]");
 		expect(text).toContain("0%");
@@ -31,6 +32,8 @@ describe("createProgressBar", () => {
 		const text = getText(line);
 
 		expect(text).toContain("100%");
+		// Should not contain empty char
+		// But wait, width default 20. 100% means 20 filled. 0 empty.
 		expect(text).not.toContain("░");
 	});
 
@@ -41,6 +44,7 @@ describe("createProgressBar", () => {
 		const filled = segments.find((s) => s.text.includes("█"));
 		const empty = segments.find((s) => s.text.includes("░"));
 
+		// 50% of 10 is 5.
 		expect(filled?.text.length).toBe(5);
 		expect(empty?.text.length).toBe(5);
 	});
@@ -48,10 +52,10 @@ describe("createProgressBar", () => {
 	test("applies styles correctly", () => {
 		const line = createProgressBar({
 			progress: 0.5,
-			style: "blue",
-			bracketStyle: "red",
-			barStyle: "green",
-			percentageStyle: "yellow"
+			style: { color: "blue" },
+			bracketStyle: { color: "red" },
+			barStyle: { color: "green" },
+			percentageStyle: { color: "yellow" }
 		});
 
 		const start = line.segments.find((s) => s.text === "[");
@@ -59,21 +63,21 @@ describe("createProgressBar", () => {
 		const end = line.segments.find((s) => s.text === "]");
 		const percentage = line.segments.find((s) => s.text.includes("%"));
 
-		expect(start?.style).toBe("red");
-		expect(filled?.style).toBe("green");
-		expect(end?.style).toBe("red");
-		expect(percentage?.style).toBe("yellow");
+		expect(start?.style).toEqual({ color: "red" });
+		expect(filled?.style).toEqual({ color: "green" });
+		expect(end?.style).toEqual({ color: "red" });
+		expect(percentage?.style).toEqual({ color: "yellow" });
 	});
 
 	test("cascades styles (general style -> specific)", () => {
 		const line = createProgressBar({
 			progress: 0.5,
-			style: "blue"
+			style: { color: "blue" }
 		});
 
 		line.segments.forEach((s) => {
 			if (s.text.trim().length > 0) {
-				expect(s.style).toBe("blue");
+				expect(s.style).toEqual({ color: "blue" });
 			}
 		});
 	});

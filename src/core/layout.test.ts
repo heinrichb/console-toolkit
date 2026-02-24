@@ -1,10 +1,10 @@
 import { expect, test, describe, spyOn, afterEach } from "bun:test";
 import { mergeMultipleColumns, printColumns } from "./layout";
-import { StyledLine } from "./types";
+import { PrintLine } from "./types";
 import { getLineLength } from "./utils";
 
-const lineA: StyledLine = { segments: [{ text: "Hello", style: [] }] };
-const lineB: StyledLine = { segments: [{ text: "World!!", style: [] }] };
+const lineA: PrintLine = { segments: [{ text: "Hello" }] };
+const lineB: PrintLine = { segments: [{ text: "World!!" }] };
 
 describe("Layout Utilities", () => {
 	const stdoutSpy = spyOn(process.stdout, "write").mockImplementation(() => true);
@@ -14,10 +14,19 @@ describe("Layout Utilities", () => {
 	});
 
 	test("mergeMultipleColumns handles asymmetric column lengths", () => {
-		const merged = mergeMultipleColumns([[lineA], [lineB, lineB]], " | ", "", [10]);
+		// Column 1: [lineA]
+		// Column 2: [lineB, lineB]
+		// Separator: " | "
+		// Default Style: undefined
+		// Widths: [10] (first col width 10)
+		const merged = mergeMultipleColumns([[lineA], [lineB, lineB]], " | ", undefined, [10]);
 
 		expect(merged.length).toBe(2);
-		expect(getLineLength(merged[1])).toBe(10 + 3 + 7);
+
+		// Second merged line:
+		// Col 1 is empty (pad to 10) + " | " + Col 2 (lineB, length 7)
+		// 10 + 3 + 7 = 20
+		expect(getLineLength(merged[1])).toBe(20);
 	});
 
 	test("printColumns executes correctly", () => {
@@ -31,7 +40,7 @@ describe("Layout Utilities", () => {
 	});
 
 	test("printColumns handles undefined style in segments", () => {
-		const lineNoStyle: StyledLine = { segments: [{ text: "NoStyle" }] };
+		const lineNoStyle: PrintLine = { segments: [{ text: "NoStyle" }] };
 		printColumns([[lineNoStyle]]);
 
 		expect(stdoutSpy).toHaveBeenCalled();
@@ -41,7 +50,10 @@ describe("Layout Utilities", () => {
 
 	test("printColumns handles empty columns", () => {
 		printColumns([]);
-		expect(stdoutSpy).toHaveBeenCalled(); // Should clear lines if interactive, or do nothing.
+		// Should just print nothing or minimal output (if logic handles empty array gracefully)
+		// mergeMultipleColumns returns []
+		// printer.print({ lines: [] }) -> might output clear sequence or empty string
+		expect(stdoutSpy).toHaveBeenCalled();
 	});
 
 	test("printColumns handles 3 columns", () => {

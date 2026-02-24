@@ -1,4 +1,4 @@
-import { HexColor, Style } from "./types";
+import { Color, HexColor, PrintStyle, StandardColor, StyleModifier } from "./types";
 
 // -----------------
 // Color Utilities
@@ -10,16 +10,46 @@ const ESC = "\x1b";
  */
 export const RESET = `${ESC}[0m`;
 
+const STANDARD_COLORS: Record<StandardColor, string> = {
+	black: "#000000",
+	red: "#EF4444", // Tailwind Red-500
+	green: "#10B981", // Tailwind Emerald-500
+	yellow: "#F59E0B", // Tailwind Amber-500
+	blue: "#3B82F6", // Tailwind Blue-500
+	magenta: "#EC4899", // Tailwind Pink-500
+	cyan: "#06B6D4", // Tailwind Cyan-500
+	white: "#FFFFFF",
+	gray: "#6B7280", // Tailwind Gray-500
+	grey: "#6B7280"
+};
+
+const MODIFIER_CODES: Record<StyleModifier, string> = {
+	default: "0",
+	bold: "1",
+	dim: "2",
+	italic: "3",
+	underline: "4",
+	inverse: "7",
+	hidden: "8",
+	strikethrough: "9"
+};
+
+/**
+ * Converts any Color (hex or standard name) to a Hex string.
+ */
+export function colorToHex(color: Color): string {
+	if (color.startsWith("#")) return color;
+	const hex = STANDARD_COLORS[color.toLowerCase() as StandardColor];
+	if (!hex) return "#FFFFFF"; // Fallback
+	return hex;
+}
+
 /**
  * Converts a hex color string to an RGB object.
- * Validates the hex string format.
- *
- * @param hex - Hex color in the form "#RRGGBB".
- * @returns Object with r, g, b components (0-255).
  */
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
 	const h = hex.replace(/^#/, "");
-	if (h.length !== 6) throw new Error("Invalid hex color.");
+	if (h.length !== 6) return { r: 255, g: 255, b: 255 }; // Fallback for invalid hex
 	return {
 		r: parseInt(h.substring(0, 2), 16),
 		g: parseInt(h.substring(2, 4), 16),
@@ -29,30 +59,35 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
 
 /**
  * Converts RGB to a 24-bit ANSI foreground color escape sequence.
- *
- * @param r - Red component (0-255).
- * @param g - Green component (0-255).
- * @param b - Blue component (0-255).
- * @returns ANSI escape sequence string.
  */
 export function rgbToAnsi(r: number, g: number, b: number): string {
 	return `${ESC}[38;2;${r};${g};${b}m`;
 }
 
 /**
- * Converts a hex color string directly to an ANSI escape sequence.
- *
- * @param hex - Hex color string.
- * @returns ANSI escape sequence string.
+ * Converts any Color to an ANSI escape sequence.
  */
-export function hexToAnsi(hex: string): string {
+export function resolveColorToAnsi(color: Color): string {
+	const hex = colorToHex(color);
 	const { r, g, b } = hexToRgb(hex);
 	return rgbToAnsi(r, g, b);
 }
 
 /**
- * Converts a single RGB component to a 2-digit hex string.
- * Helper for interpolation.
+ * Converts a list of modifiers to an ANSI escape sequence.
+ */
+export function resolveModifiersToAnsi(modifiers?: StyleModifier[]): string {
+	if (!modifiers || modifiers.length === 0) return "";
+	return modifiers
+		.map((m) => {
+			const code = MODIFIER_CODES[m];
+			return code ? `${ESC}[${code}m` : "";
+		})
+		.join("");
+}
+
+/**
+ * Helper to convert number to 2-digit hex.
  */
 function toHex(c: number): string {
 	const hex = Math.max(0, Math.min(255, Math.round(c))).toString(16);
@@ -60,15 +95,9 @@ function toHex(c: number): string {
 }
 
 /**
- * Interpolates between two hex colors based on a factor (0 to 1) and returns a Hex color string.
- * Used for gradients.
- *
- * @param color1 - Start color (hex).
- * @param color2 - End color (hex).
- * @param factor - Interpolation factor (0.0 to 1.0).
- * @returns Interpolated Hex color.
+ * Interpolates between two hex colors.
  */
-export function interpolateColor(color1: string, color2: string, factor: number): HexColor {
+export function interpolateHex(color1: string, color2: string, factor: number): string {
 	const f = Math.max(0, Math.min(1, factor));
 	const c1 = hexToRgb(color1);
 	const c2 = hexToRgb(color2);
@@ -78,63 +107,81 @@ export function interpolateColor(color1: string, color2: string, factor: number)
 	return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-// -----------------
-// Style Resolution
-// -----------------
-
-const STYLE_CODES: Record<string, string> = {
-	default: "0",
-	bold: "1",
-	dim: "2",
-	italic: "3",
-	underline: "4",
-	inverse: "7",
-	hidden: "8",
-	strikethrough: "9",
-	black: "30",
-	red: "31",
-	green: "32",
-	yellow: "33",
-	blue: "34",
-	magenta: "35",
-	cyan: "36",
-	white: "37",
-	gray: "90",
-	grey: "90"
-};
+/**
+ * Public interpolation function that accepts any Color type.
+ */
+export function interpolateColor(color1: Color, color2: Color, factor: number): HexColor {
+	return interpolateHex(colorToHex(color1), colorToHex(color2), factor) as HexColor;
+}
 
 /**
- * Resolves a single Style or array of Styles into an ANSI escape sequence.
- * Handles hex colors, standard colors, and modifiers.
- *
- * @param style - The style or array of styles to resolve.
- * @returns The resulting ANSI escape sequence string.
+ * logic to get a specific color from a multi-stop gradient array at a specific factor (0-1).
  */
-export function resolveStyle(style?: Style | Style[]): string {
-	if (Array.isArray(style)) {
-		return style.map(resolveStyle).join("");
+export function getGradientColor(colors: Color[], factor: number): string {
+	if (colors.length === 0) return "";
+	if (colors.length === 1) return resolveColorToAnsi(colors[0]);
+
+	const f = Math.max(0, Math.min(1, factor));
+	// Map factor to segments between colors
+	// e.g. 3 colors: [0, 0.5, 1]. factor 0.25 is in first segment (0.5 of way through)
+	const segmentLength = 1 / (colors.length - 1);
+
+	const segmentIndex = Math.min(Math.floor(f / segmentLength), colors.length - 2);
+	const segmentFactor = (f - segmentIndex * segmentLength) / segmentLength;
+
+	const c1 = colors[segmentIndex];
+	const c2 = colors[segmentIndex + 1];
+
+	const hex = interpolateColor(c1, c2, segmentFactor);
+	return resolveColorToAnsi(hex);
+}
+
+// -----------------
+// Style Merging
+// -----------------
+
+/**
+ * Merges a child style into a parent style.
+ * - Modifiers are combined (union).
+ * - Child color overrides parent color.
+ */
+export function mergeStyles(parent?: PrintStyle, child?: PrintStyle): PrintStyle {
+	if (!parent && !child) return {};
+	if (!parent) return child ?? {};
+	if (!child) return parent;
+
+	const mergedModifiers = Array.from(new Set([...(parent.modifiers ?? []), ...(child.modifiers ?? [])]));
+
+	return {
+		modifiers: mergedModifiers,
+		color: child.color ?? parent.color
+	};
+}
+
+/**
+ * Resolves a style object into an ANSI string.
+ * If the color is a gradient (array), it uses the provided factor (0-1) to pick the color.
+ * Defaults to factor 0 if not provided.
+ */
+export function resolveStyle(style?: PrintStyle, gradientFactor = 0): string {
+	if (!style) return "";
+
+	let ansi = "";
+
+	if (style.modifiers) {
+		ansi += resolveModifiersToAnsi(style.modifiers);
 	}
 
-	if (typeof style !== "string") {
-		return "";
-	}
-
-	// Check for hex color
-	if (style.startsWith("#")) {
-		try {
-			return hexToAnsi(style);
-		} catch {
-			return ""; // Invalid hex, ignore
+	if (style.color) {
+		if (Array.isArray(style.color)) {
+			// Gradient
+			const hex = getGradientColor(style.color, gradientFactor);
+			ansi += hex;
+		} else {
+			// Solid
+			ansi += resolveColorToAnsi(style.color);
 		}
 	}
 
-	// Check for standard styles/colors
-	const code = STYLE_CODES[style.toLowerCase()];
-	if (code) {
-		return `${ESC}[${code}m`;
-	}
-
-	// Fallback: return as raw string if it looks like ANSI or just text
-	// Ideally we would validate ANSI here, but for flexibility we return it.
-	return style;
+	return ansi;
 }
