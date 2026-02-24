@@ -18,11 +18,11 @@ This file contains the core principles, workflows, and standards for working on 
     * `eslint-disable` comments should be a last resort and must be accompanied by a comment explaining why the suppression is necessary.
 * **Runtime Independence:** This library is intended for Node.js and Bun environments. Ensure standard console tools (`process.stdout.write`, `console.log`) are utilized safely and efficiently.
 
-### Documentation
+### Documentation & Comments
 * **JSDoc:** Use comprehensive JSDoc style comments for all exported functions, classes, and types. As a utility library, developer-facing documentation is critical.
-* **Human-Readable:** Write internal comments for future developers. Be helpful, clear, and concise.
-
-### Project Specifics
+* **Professional Comments:**
+    * **No "Thinking Out Loud":** Comments must be final-product ready. Do not include internal monologues, "TODO for myself", or temporary notes like "checking if this works".
+    * **Concise & Helpful:** Write internal comments for future developers. Be helpful, clear, and concise.
 * **Tech Debt:** Track major upgrades, missing coverage, or long-term refactors in `TODO.md`.
 * **Demo Script:** The `src/demo.ts` script must demonstrate *all* capabilities of the library and be kept up-to-date with every feature addition or change.
 
