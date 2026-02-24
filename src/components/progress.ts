@@ -1,4 +1,4 @@
-import { StyledLine, StyledSegment, Style } from "../core/types";
+import { PrintLine, PrintSegment, PrintStyle } from "../core/types";
 
 export interface ProgressBarOptions {
 	/**
@@ -15,45 +15,45 @@ export interface ProgressBarOptions {
 	/**
 	 * Base style for the entire progress bar.
 	 */
-	style?: Style | Style[];
+	style?: PrintStyle;
 
 	/**
 	 * Style for the brackets (start and end characters).
-	 * Defaults to `style` or gray.
+	 * Defaults to `style`.
 	 */
-	bracketStyle?: Style | Style[];
+	bracketStyle?: PrintStyle;
 
 	/**
 	 * Specific style for the start bracket. Overrides `bracketStyle`.
 	 */
-	startStyle?: Style | Style[];
+	startStyle?: PrintStyle;
 
 	/**
 	 * Specific style for the end bracket. Overrides `bracketStyle`.
 	 */
-	endStyle?: Style | Style[];
+	endStyle?: PrintStyle;
 
 	/**
 	 * Style for the bar (filled and empty parts).
 	 * Defaults to `style`.
 	 */
-	barStyle?: Style | Style[];
+	barStyle?: PrintStyle;
 
 	/**
 	 * Specific style for the filled part. Overrides `barStyle`.
 	 */
-	fillStyle?: Style | Style[];
+	fillStyle?: PrintStyle;
 
 	/**
 	 * Specific style for the empty part. Overrides `barStyle`.
 	 */
-	emptyStyle?: Style | Style[];
+	emptyStyle?: PrintStyle;
 
 	/**
 	 * Style for the percentage text.
 	 * Defaults to `style`.
 	 */
-	percentageStyle?: Style | Style[];
+	percentageStyle?: PrintStyle;
 
 	/**
 	 * Character to use for the start bracket. Defaults to `[`.
@@ -87,9 +87,9 @@ export interface ProgressBarOptions {
 }
 
 /**
- * Creates a StyledLine representing a progress bar.
+ * Creates a PrintLine representing a progress bar.
  */
-export function createProgressBar(options: ProgressBarOptions): StyledLine {
+export function createProgressBar(options: ProgressBarOptions): PrintLine {
 	const {
 		progress,
 		width = 20,
@@ -116,19 +116,18 @@ export function createProgressBar(options: ProgressBarOptions): StyledLine {
 	const filledWidth = Math.round(p * width);
 	const emptyWidth = width - filledWidth;
 
-	// Resolve styles
-	const baseStyle = style ?? [];
-	const resolvedBracketStyle = bracketStyle ?? baseStyle;
+	// Resolve styles (Defaults)
+	const resolvedBracketStyle = bracketStyle ?? style;
 	const resolvedStartStyle = startStyle ?? resolvedBracketStyle;
 	const resolvedEndStyle = endStyle ?? resolvedBracketStyle;
 
-	const resolvedBarStyle = barStyle ?? baseStyle;
+	const resolvedBarStyle = barStyle ?? style;
 	const resolvedFillStyle = fillStyle ?? resolvedBarStyle;
 	const resolvedEmptyStyle = emptyStyle ?? resolvedBarStyle;
 
-	const resolvedPercentageStyle = percentageStyle ?? baseStyle;
+	const resolvedPercentageStyle = percentageStyle ?? style;
 
-	const segments: StyledSegment[] = [];
+	const segments: PrintSegment[] = [];
 
 	// Start Bracket
 	if (startChar) {

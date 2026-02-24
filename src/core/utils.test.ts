@@ -1,9 +1,9 @@
 import { expect, test, describe } from "bun:test";
 import { getLineLength, computeMaxWidth, padLine } from "./utils";
-import { StyledLine } from "./types";
+import { PrintLine } from "./types";
 
-const lineA: StyledLine = { segments: [{ text: "Hello", style: [] }] };
-const lineB: StyledLine = { segments: [{ text: "World!!", style: [] }] };
+const lineA: PrintLine = { segments: [{ text: "Hello", style: {} }] };
+const lineB: PrintLine = { segments: [{ text: "World!!", style: {} }] };
 
 describe("Line Utilities", () => {
 	test("getLineLength calculates correctly", () => {
@@ -17,15 +17,15 @@ describe("Line Utilities", () => {
 	});
 
 	test("padLine adds padding when needed", () => {
-		const padded = padLine(lineA, 10, "red");
+		const padded = padLine(lineA, 10, { color: "red" });
 
 		expect(getLineLength(padded)).toBe(10);
-		expect(padded.segments[1].style).toBe("red");
+		expect(padded.segments[1].style).toEqual({ color: "red" });
 		expect(padded.segments[1].text).toBe("     ");
 	});
 
 	test("padLine does nothing if line is already wide enough", () => {
-		const ignored = padLine(lineB, 5, "red");
+		const ignored = padLine(lineB, 5, { color: "red" });
 
 		expect(getLineLength(ignored)).toBe(7);
 		expect(ignored.segments.length).toBe(1);

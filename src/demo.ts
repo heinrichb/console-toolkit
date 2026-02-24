@@ -1,14 +1,5 @@
-import {
-	printColumns,
-	getDragonLines,
-	Printer,
-	interpolateColor,
-	StyledLine,
-	createProgressBar,
-	Spinner,
-	SPINNERS,
-	HexColor
-} from "./index";
+import { printColumns, getDragonLines, Printer, interpolateColor, createProgressBar, Spinner, SPINNERS } from "./index";
+import { PrintLine, PrintStyle, HexColor } from "./core/types";
 import pkg from "../package.json";
 
 /**
@@ -29,20 +20,20 @@ export async function runDemo() {
 	console.clear();
 	const staticPrinter = new Printer();
 
-	// 1. Test Static Dual Column Print
+	// 1. Static Dual Column Print
 	console.log("--- Static Dual Column Demo ---");
-	const purple = "#A78BFA";
-	const blue = "#60A5FA";
-	const green = "#34D399";
-	const yellow = "#FBBF24";
+	const purple: PrintStyle = { color: "#A78BFA" };
+	const blue: PrintStyle = { color: "#60A5FA" };
+	const green: PrintStyle = { color: "#34D399" };
+	const yellow: PrintStyle = { color: "#FBBF24" };
 
-	const leftContent: StyledLine[] = [
+	const leftContent: PrintLine[] = [
 		{ segments: [{ text: "Package:", style: purple }] },
 		{ segments: [{ text: "Version:", style: purple }] },
 		{ segments: [{ text: "Status:", style: purple }] }
 	];
 
-	const rightContent: StyledLine[] = [
+	const rightContent: PrintLine[] = [
 		{ segments: [{ text: pkg.name, style: blue }] },
 		{ segments: [{ text: pkg.version, style: green }] },
 		{ segments: [{ text: "Testing live output...", style: yellow }] }
@@ -51,31 +42,39 @@ export async function runDemo() {
 	printColumns([leftContent, rightContent], { separator: "  =>  " });
 	console.log("\n");
 
-	// 1b. Test 3-Column Print
-	console.log("--- Static 3-Column Demo ---");
-	const col1: StyledLine[] = [{ segments: [{ text: "Column 1", style: "red" }] }];
-	const col2: StyledLine[] = [{ segments: [{ text: "Column 2", style: "green" }] }];
-	const col3: StyledLine[] = [{ segments: [{ text: "Column 3", style: "blue" }] }];
+	// 2. Block Vertical Gradient Demo
+	console.log("--- Block Vertical Gradient Demo (New Feature) ---");
+	// This demonstrates applying a gradient to a block of lines.
+	// The lines inherit the gradient color based on their vertical position.
+	const gradientBlockLines: PrintLine[] = Array.from({ length: 10 }, (_, i) => ({
+		segments: [{ text: `Line ${i + 1} - Inherits Gradient` }]
+	}));
 
-	printColumns([col1, col2, col3], { separator: " | " });
+	staticPrinter.print({
+		style: { color: ["#EF4444", "#3B82F6"] }, // Red to Blue Vertical Gradient
+		lines: gradientBlockLines
+	});
 	console.log("\n");
 
-	// 2. Test the Dragon Gradient Preset
+	// 3. Dragon Gradient Preset
 	console.log("--- Dragon Gradient Preset ---");
 	const dragon = getDragonLines("#EF4444", "#FDE047");
-	staticPrinter.print(dragon);
+	staticPrinter.print({ lines: dragon });
 	console.log("\n");
 
-	// 3. Test Progress Bar
-	console.log("--- Interactive Progress Bar Demo ---");
-	const interactiveProgressPrinter = new Printer({ interactive: true });
-	const gray = "#4B5563";
+	// 4. Interactive Progress Bar Demo
+	console.log("--- Live Progress Bar Demo ---");
+	const livePrinter = new Printer({ live: true });
+	const gray: PrintStyle = { color: "#4B5563" };
 
 	for (let i = 0; i <= 100; i += 2) {
-		const progressColor = interpolateColor("#3B82F6", "#10B981", i / 100);
+		const factor = i / 100;
+		const progressColorHex = interpolateColor("#3B82F6", "#10B981", factor);
+		const progressColor: PrintStyle = { color: progressColorHex };
 
+		// Standard Bar
 		const progressLine = createProgressBar({
-			progress: i / 100,
+			progress: factor,
 			width: 30,
 			startChar: "[",
 			endChar: "]",
@@ -86,137 +85,94 @@ export async function runDemo() {
 			percentageStyle: progressColor
 		});
 
-		const factor = i / 100;
-		const gradientColor = getProgressBarColor(factor);
+		// Gradient Bar (Horizontal Gradient on Line)
+		const gradientHex = getProgressBarColor(factor);
+		const gradientStyle: PrintStyle = { color: gradientHex }; // Dynamic solid color for demo simplicity here
+		// Actually, let's use a real horizontal gradient on the bar!
+		// But createProgressBar currently takes PrintStyle which applies to segments.
+		// If we pass { color: [c1, c2] }, it will gradient the segment.
 
-		const gradientBar = createProgressBar({
+		const complexGradientBar = createProgressBar({
 			progress: factor,
 			width: 40,
 			startChar: "▕",
 			endChar: "▏",
 			fillChar: "█",
 			emptyChar: "░",
-			startStyle: gradientColor,
-			endStyle: gradientColor,
-			fillStyle: gradientColor,
-			emptyStyle: "gray",
-			percentageStyle: ["bold", gradientColor]
+			startStyle: gradientStyle,
+			endStyle: gradientStyle,
+			fillStyle: { color: ["#3B82F6", "#EC4899"] }, // Blue to Pink Gradient on the filled part!
+			emptyStyle: { color: "gray" },
+			percentageStyle: { modifiers: ["bold"], color: gradientHex }
 		});
 
-		const sharpBar = createProgressBar({
-			progress: factor,
-			width: 40,
-			startChar: "[",
-			endChar: "]",
-			fillChar: "#",
-			emptyChar: "-",
-			style: "white",
-			fillStyle: "green",
-			emptyStyle: "dim"
+		livePrinter.print({
+			lines: [
+				progressLine,
+				{ segments: [] },
+				{ segments: [{ text: "Horizontal Gradient on Bar Segment:", style: { modifiers: ["bold"] } }] },
+				complexGradientBar
+			]
 		});
-
-		const noStyleBar = createProgressBar({
-			progress: factor,
-			width: 40,
-			startChar: "<",
-			endChar: ">",
-			fillChar: "=",
-			emptyChar: " "
-		});
-
-		interactiveProgressPrinter.print([
-			progressLine,
-			{ segments: [] },
-			{ segments: [{ text: "Gradient: ", style: "bold" }] },
-			gradientBar,
-			{ segments: [] },
-			{ segments: [{ text: "Sharp:    ", style: "bold" }] },
-			sharpBar,
-			{ segments: [] },
-			{ segments: [{ text: "Minimal:  ", style: "bold" }] },
-			noStyleBar
-		]);
 		await new Promise((resolve) => setTimeout(resolve, 30));
 	}
 	console.log("\n");
 
-	// 4. Spinners Demo
+	// 5. Spinners Demo
 	console.log("--- Spinners Demo ---");
 	const spinnerDots = new Spinner({ frames: SPINNERS.dots, interval: 80 });
 	const spinnerLines = new Spinner({ frames: SPINNERS.lines, interval: 100 });
-	const spinnerArrows = new Spinner({ frames: SPINNERS.arrows, interval: 120 });
-	const spinnerCircle = new Spinner({ frames: SPINNERS.circle, interval: 150 });
-	const spinnerSquare = new Spinner({ frames: SPINNERS.square, interval: 200 });
 
-	const interactiveSpinnerPrinter = new Printer({ interactive: true });
-	const startTime = Date.now();
+	const spinnerPrinter = new Printer({ live: true });
+	const spinnerStart = Date.now();
 
-	while (Date.now() - startTime < 3000) {
-		const lines: StyledLine[] = [
+	while (Date.now() - spinnerStart < 3000) {
+		const lines: PrintLine[] = [
 			{
 				segments: [
-					{ text: "Dots:   ", style: "dim" },
-					{ text: spinnerDots.getFrame(), style: "cyan" }
+					{ text: "Dots:   ", style: { modifiers: ["dim"] } },
+					{ text: spinnerDots.getFrame(), style: { color: "cyan" } }
 				]
 			},
 			{
 				segments: [
-					{ text: "Lines:  ", style: "dim" },
-					{ text: spinnerLines.getFrame(), style: "yellow" }
-				]
-			},
-			{
-				segments: [
-					{ text: "Arrows: ", style: "dim" },
-					{ text: spinnerArrows.getFrame(), style: "green" }
-				]
-			},
-			{
-				segments: [
-					{ text: "Circle: ", style: "dim" },
-					{ text: spinnerCircle.getFrame(), style: "magenta" }
-				]
-			},
-			{
-				segments: [
-					{ text: "Square: ", style: "dim" },
-					{ text: spinnerSquare.getFrame(), style: "blue" }
+					{ text: "Lines:  ", style: { modifiers: ["dim"] } },
+					{ text: spinnerLines.getFrame(), style: { color: "yellow" } }
 				]
 			}
 		];
-		interactiveSpinnerPrinter.print(lines);
+		spinnerPrinter.print({ lines });
 		await new Promise((resolve) => setTimeout(resolve, 50));
 	}
 	console.log("\n");
 
-	// 5. Style Codes Demo
+	// 6. Style Codes Demo
 	console.log("--- Style Codes Demo ---");
 
-	const styles = [
+	const styles: { name: string; style?: PrintStyle }[] = [
 		{ name: "Default", style: undefined },
-		{ name: "Bold + Red", style: ["bold", "red"] },
-		{ name: "Bold", style: "bold" },
-		{ name: "Dim", style: "dim" },
-		{ name: "Italic", style: "italic" },
-		{ name: "Underline", style: "underline" },
-		{ name: "Strikethrough", style: "strikethrough" },
-		{ name: "Inverse", style: "inverse" },
-		{ name: "Hidden", style: "hidden" },
-		{ name: "Black", style: "black" },
-		{ name: "Red", style: "red" },
-		{ name: "Green", style: "green" },
-		{ name: "Yellow", style: "yellow" },
-		{ name: "Blue", style: "blue" },
-		{ name: "Magenta", style: "magenta" },
-		{ name: "Cyan", style: "cyan" },
-		{ name: "White", style: "white" },
-		{ name: "Gray", style: "gray" }
+		{ name: "Bold + Red", style: { modifiers: ["bold"], color: "red" } },
+		{ name: "Bold", style: { modifiers: ["bold"] } },
+		{ name: "Dim", style: { modifiers: ["dim"] } },
+		{ name: "Italic", style: { modifiers: ["italic"] } },
+		{ name: "Underline", style: { modifiers: ["underline"] } },
+		{ name: "Strikethrough", style: { modifiers: ["strikethrough"] } },
+		{ name: "Inverse", style: { modifiers: ["inverse"] } },
+		{ name: "Hidden", style: { modifiers: ["hidden"] } },
+		{ name: "Red", style: { color: "red" } },
+		{ name: "Green", style: { color: "green" } },
+		{ name: "Yellow", style: { color: "yellow" } },
+		{ name: "Blue", style: { color: "blue" } },
+		{ name: "Magenta", style: { color: "magenta" } },
+		{ name: "Cyan", style: { color: "cyan" } },
+		{ name: "White", style: { color: "white" } },
+		{ name: "Gray", style: { color: "gray" } }
 	];
 
-	const styleLines: StyledLine[] = styles.map((s) => ({
-		segments: [{ text: s.name.padEnd(15) }, { text: "Sample Text", style: s.style }]
+	const styleLines: PrintLine[] = styles.map((s) => ({
+		segments: [{ text: s.name.padEnd(20) }, { text: "Sample Text", style: s.style }]
 	}));
 
-	staticPrinter.print(styleLines);
+	staticPrinter.print({ lines: styleLines });
 	console.log("\n✨ Demo Complete!");
 }

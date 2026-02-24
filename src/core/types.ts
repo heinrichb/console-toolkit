@@ -5,7 +5,7 @@
 /**
  * Standard colors supported by most terminals.
  */
-export type StandardColor = "black" | "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "gray" | "grey"; // Support both spellings
+export type StandardColor = "black" | "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "gray" | "grey";
 
 /**
  * Text style modifiers.
@@ -18,36 +18,69 @@ export type StyleModifier = "bold" | "dim" | "italic" | "underline" | "default" 
 export type HexColor = `#${string}`;
 
 /**
- * A style can be a standard color name, a hex color string, or a style modifier.
- * It can also be a raw ANSI string (though discouraged) for backward compatibility or special cases.
+ * A color can be a standard color name or a hex color string.
  */
-// eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
-export type Style = StandardColor | StyleModifier | HexColor | string;
+export type Color = StandardColor | HexColor;
+
+/**
+ * Represents the style configuration for a text segment, line, or block.
+ */
+export interface PrintStyle {
+	/**
+	 * The color to apply.
+	 * - A single color (string) applies a solid color.
+	 * - An array of colors applies a gradient.
+	 */
+	color?: Color | Color[];
+
+	/**
+	 * A list of style modifiers (e.g., bold, italic) to apply.
+	 */
+	modifiers?: StyleModifier[];
+}
 
 /**
  * Represents a segment of text with applied styles.
  */
-export interface StyledSegment {
+export interface PrintSegment {
 	/** The text content of the segment. */
 	text: string;
-	/** Style or array of styles to apply to the text. */
-	style?: Style | Style[];
+	/** The style specific to this segment. Merges with parent styles. */
+	style?: PrintStyle;
 }
 
 /**
  * Represents a line of text composed of multiple styled segments.
  */
-export interface StyledLine {
+export interface PrintLine {
 	/** Array of segments that make up the line. */
-	segments: StyledSegment[];
+	segments: PrintSegment[];
+	/** The style specific to this line. Merges with parent block style and applies to all children. */
+	style?: PrintStyle;
+}
+
+/**
+ * Represents a block of lines managed by the printer.
+ */
+export interface PrintBlock {
+	/** Array of lines that make up the block. */
+	lines: PrintLine[];
+	/** The style specific to this block. Applies to all children. */
+	style?: PrintStyle;
 }
 
 /**
  * Configuration for the Printer engine.
  */
 export interface PrinterOptions {
-	/** If true, the printer will overwrite previous lines instead of appending new ones. */
-	interactive?: boolean;
-	/** The default style to apply to padding or separators. */
-	defaultStyle?: Style | Style[];
+	/**
+	 * If true, the printer will overwrite previous output on subsequent print calls.
+	 * Useful for live-updating displays (spinners, progress bars).
+	 */
+	live?: boolean;
+
+	/**
+	 * Initial data to load into the printer.
+	 */
+	data?: PrintBlock;
 }

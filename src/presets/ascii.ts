@@ -1,4 +1,4 @@
-import { StyledLine } from "../core/types";
+import { PrintLine, Color } from "../core/types";
 import { interpolateColor } from "../core/style";
 
 // -----------------
@@ -6,9 +6,9 @@ import { interpolateColor } from "../core/style";
 // -----------------
 
 /**
- * Returns the classic Dragon ASCII art as StyledLines with a vertical color gradient.
+ * Returns the classic Dragon ASCII art as PrintLines with a vertical color gradient.
  */
-export function getDragonLines(startColor = "#EF4444", endColor = "#F59E0B"): StyledLine[] {
+export function getDragonLines(startColor: Color = "#EF4444", endColor: Color = "#F59E0B"): PrintLine[] {
 	const rawDragon = [
 		"                ^    ^",
 		"               / \\  //\\",
@@ -29,9 +29,11 @@ export function getDragonLines(startColor = "#EF4444", endColor = "#F59E0B"): St
 		"                                                          /.-'"
 	];
 
+	// Note: We could use PrintBlock's vertical gradient feature instead of manual interpolation here.
+	// But to keep logic similar and return lines directly, we manual interp.
 	return rawDragon.map((text, i) => {
 		const factor = rawDragon.length <= 1 ? 0 : i / (rawDragon.length - 1);
 		const colorStyle = interpolateColor(startColor, endColor, factor);
-		return { segments: [{ text, style: colorStyle }] };
+		return { segments: [{ text, style: { color: colorStyle } }] };
 	});
 }
