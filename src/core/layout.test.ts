@@ -1,5 +1,5 @@
 import { expect, test, describe, spyOn, afterEach } from "bun:test";
-import { mergeMultipleColumns, printColumns } from "./layout";
+import { mergeColumns as mergeColumns, printColumns } from "./layout";
 import { PrintLine } from "./types";
 import { getLineLength } from "./utils";
 
@@ -13,13 +13,13 @@ describe("Layout Utilities", () => {
 		stdoutSpy.mockClear();
 	});
 
-	test("mergeMultipleColumns handles asymmetric column lengths", () => {
+	test("mergeColumns handles asymmetric column lengths", () => {
 		// Column 1: [lineA]
 		// Column 2: [lineB, lineB]
 		// Separator: " | "
 		// Default Style: undefined
 		// Widths: [10] (first col width 10)
-		const merged = mergeMultipleColumns([[lineA], [lineB, lineB]], " | ", undefined, [10]);
+		const merged = mergeColumns([[lineA], [lineB, lineB]], " | ", undefined, [10]);
 
 		expect(merged.length).toBe(2);
 
@@ -51,7 +51,7 @@ describe("Layout Utilities", () => {
 	test("printColumns handles empty columns", () => {
 		printColumns([]);
 		// Should just print nothing or minimal output (if logic handles empty array gracefully)
-		// mergeMultipleColumns returns []
+		// mergeColumns returns []
 		// printer.print({ lines: [] }) -> might output clear sequence or empty string
 		expect(stdoutSpy).toHaveBeenCalled();
 	});
