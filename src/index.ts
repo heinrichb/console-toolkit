@@ -50,6 +50,14 @@ export function rgbToAnsi(r: number, g: number, b: number): string {
 }
 
 /**
+ * Converts a hex color string directly to an ANSI escape sequence.
+ */
+export function hexToAnsi(hex: string): string {
+	const { r, g, b } = hexToRgb(hex);
+	return rgbToAnsi(r, g, b);
+}
+
+/**
  * Interpolates between two hex colors based on a factor (0 to 1) and returns an ANSI escape sequence.
  */
 export function interpolateColor(color1: string, color2: string, factor: number): string {
