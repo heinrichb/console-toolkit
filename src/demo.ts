@@ -68,14 +68,14 @@ export async function runDemo() {
 	console.log("--- Style Codes Demo ---");
 
 	const styles = [
-		{ name: "Reset", style: "reset" },
+		{ name: "Default", style: "default" },
 		{ name: "Bold", style: "bold" },
 		{ name: "Dim", style: "dim" },
 		{ name: "Italic", style: "italic" },
 		{ name: "Underline", style: "underline" },
+		{ name: "Strikethrough", style: "strikethrough" },
 		{ name: "Inverse", style: "inverse" },
 		{ name: "Hidden", style: "hidden" },
-		{ name: "Strikethrough", style: "strikethrough" },
 		{ name: "Black", style: "black" },
 		{ name: "Red", style: "red" },
 		{ name: "Green", style: "green" },
@@ -89,7 +89,7 @@ export async function runDemo() {
 
 	const styleLines: StyledLine[] = styles.map((s) => ({
 		segments: [
-			{ text: s.name.padEnd(15), style: "reset" },
+			{ text: s.name.padEnd(15), style: "default" },
 			{ text: "Sample Text", style: s.style }
 		]
 	}));

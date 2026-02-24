@@ -6,9 +6,28 @@
 // Style Types
 // -----------------
 
-export type StandardColor = "black" | "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "gray" | "grey"; // Support both spellings
+export type StandardColor =
+	| "black"
+	| "red"
+	| "green"
+	| "yellow"
+	| "blue"
+	| "magenta"
+	| "cyan"
+	| "white"
+	| "gray"
+	| "grey"; // Support both spellings
 
-export type StyleModifier = "bold" | "dim" | "italic" | "underline" | "reset" | "hidden" | "inverse" | "strikethrough";
+export type StyleModifier =
+	| "bold"
+	| "dim"
+	| "italic"
+	| "underline"
+	| "reset"
+	| "default" // Alias for reset
+	| "hidden"
+	| "inverse"
+	| "strikethrough";
 
 export type HexColor = `#${string}`;
 
@@ -102,6 +121,7 @@ export function interpolateColor(color1: string, color2: string, factor: number)
 
 const STYLE_CODES: Record<string, string> = {
 	reset: "0",
+	default: "0",
 	bold: "1",
 	dim: "2",
 	italic: "3",
