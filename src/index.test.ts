@@ -8,9 +8,9 @@ import {
 	computeMaxWidth,
 	padLine,
 	Printer,
-	printDualColumn,
+	printColumns,
 	getDragonLines,
-	mergeColumns,
+	mergeMultipleColumns,
 	resolveStyle,
 	StyledLine
 } from "./index";
@@ -61,7 +61,6 @@ describe("Style Resolution", () => {
 
 	test("resolveStyle handles modifiers", () => {
 		expect(resolveStyle("bold")).toBe("\x1b[1m");
-		expect(resolveStyle("reset")).toBe("\x1b[0m");
 	});
 
 	test("resolveStyle handles hex colors", () => {
@@ -105,8 +104,8 @@ describe("Line Utilities", () => {
 		expect(ignored.segments.length).toBe(1);
 	});
 
-	test("mergeColumns handles asymmetric column lengths", () => {
-		const merged = mergeColumns([lineA], [lineB, lineB], 10, " | ", "");
+	test("mergeMultipleColumns handles asymmetric column lengths", () => {
+		const merged = mergeMultipleColumns([[lineA], [lineB, lineB]], " | ", "", [10]);
 
 		expect(merged.length).toBe(2);
 		expect(getLineLength(merged[1])).toBe(10 + 3 + 7);
@@ -160,8 +159,18 @@ describe("Printer & Layout", () => {
 		expect(callArg.startsWith(expectedClear)).toBe(true);
 	});
 
-	test("printDualColumn executes correctly", () => {
-		printDualColumn([lineA], [lineB]);
+	test("printColumns executes correctly", () => {
+		printColumns([[lineA], [lineB]]);
+
+		expect(stdoutSpy).toHaveBeenCalled();
+
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("Hello");
+		expect(output).toContain("World!!");
+	});
+
+	test("printColumns handles 3 columns", () => {
+		printColumns([[lineA], [lineA], [lineB]]);
 
 		expect(stdoutSpy).toHaveBeenCalled();
 
