@@ -1,5 +1,5 @@
 import {
-	printDualColumn,
+	printColumns,
 	getDragonLines,
 	Printer,
 	interpolateColor,
@@ -48,7 +48,16 @@ export async function runDemo() {
 		{ segments: [{ text: "Testing live output...", style: yellow }] }
 	];
 
-	printDualColumn(leftContent, rightContent, { separator: "  =>  " });
+	printColumns([leftContent, rightContent], { separator: "  =>  " });
+	console.log("\n");
+
+	// 1b. Test 3-Column Print
+	console.log("--- Static 3-Column Demo ---");
+	const col1: StyledLine[] = [{ segments: [{ text: "Column 1", style: "red" }] }];
+	const col2: StyledLine[] = [{ segments: [{ text: "Column 2", style: "green" }] }];
+	const col3: StyledLine[] = [{ segments: [{ text: "Column 3", style: "blue" }] }];
+
+	printColumns([col1, col2, col3], { separator: " | " });
 	console.log("\n");
 
 	// 2. Test the Dragon Gradient Preset
@@ -184,7 +193,8 @@ export async function runDemo() {
 	console.log("--- Style Codes Demo ---");
 
 	const styles = [
-		{ name: "Default", style: "default" },
+		{ name: "Default", style: undefined },
+		{ name: "Bold + Red", style: ["bold", "red"] },
 		{ name: "Bold", style: "bold" },
 		{ name: "Dim", style: "dim" },
 		{ name: "Italic", style: "italic" },
@@ -204,10 +214,7 @@ export async function runDemo() {
 	];
 
 	const styleLines: StyledLine[] = styles.map((s) => ({
-		segments: [
-			{ text: s.name.padEnd(15), style: "default" },
-			{ text: "Sample Text", style: s.style }
-		]
+		segments: [{ text: s.name.padEnd(15) }, { text: "Sample Text", style: s.style }]
 	}));
 
 	staticPrinter.print(styleLines);

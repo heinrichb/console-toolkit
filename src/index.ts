@@ -6,19 +6,19 @@
 // Style Types
 // -----------------
 
+/**
+ * Standard colors supported by most terminals.
+ */
 export type StandardColor = "black" | "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "gray" | "grey"; // Support both spellings
 
-export type StyleModifier =
-	| "bold"
-	| "dim"
-	| "italic"
-	| "underline"
-	| "reset"
-	| "default" // Alias for reset
-	| "hidden"
-	| "inverse"
-	| "strikethrough";
+/**
+ * Text style modifiers.
+ */
+export type StyleModifier = "bold" | "dim" | "italic" | "underline" | "default" | "hidden" | "inverse" | "strikethrough";
 
+/**
+ * A valid Hex color string (e.g., "#FF0000").
+ */
 export type HexColor = `#${string}`;
 
 /**
@@ -28,13 +28,21 @@ export type HexColor = `#${string}`;
 // eslint-disable-next-line @typescript-eslint/no-redundant-type-constituents
 export type Style = StandardColor | StyleModifier | HexColor | string;
 
+/**
+ * Represents a segment of text with applied styles.
+ */
 export interface StyledSegment {
+	/** The text content of the segment. */
 	text: string;
-	/** Style or array of styles to apply to the text */
+	/** Style or array of styles to apply to the text. */
 	style?: Style | Style[];
 }
 
+/**
+ * Represents a line of text composed of multiple styled segments.
+ */
 export interface StyledLine {
+	/** Array of segments that make up the line. */
 	segments: StyledSegment[];
 }
 
@@ -53,11 +61,17 @@ export interface PrinterOptions {
 // -----------------
 
 const ESC = "\x1b";
+/**
+ * ANSI escape sequence to reset all styles.
+ */
 export const RESET = `${ESC}[0m`;
 
 /**
  * Converts a hex color string to an RGB object.
+ * Validates the hex string format.
+ *
  * @param hex - Hex color in the form "#RRGGBB".
+ * @returns Object with r, g, b components (0-255).
  */
 export function hexToRgb(hex: string): { r: number; g: number; b: number } {
 	const h = hex.replace(/^#/, "");
@@ -71,6 +85,11 @@ export function hexToRgb(hex: string): { r: number; g: number; b: number } {
 
 /**
  * Converts RGB to a 24-bit ANSI foreground color escape sequence.
+ *
+ * @param r - Red component (0-255).
+ * @param g - Green component (0-255).
+ * @param b - Blue component (0-255).
+ * @returns ANSI escape sequence string.
  */
 export function rgbToAnsi(r: number, g: number, b: number): string {
 	return `${ESC}[38;2;${r};${g};${b}m`;
@@ -78,6 +97,9 @@ export function rgbToAnsi(r: number, g: number, b: number): string {
 
 /**
  * Converts a hex color string directly to an ANSI escape sequence.
+ *
+ * @param hex - Hex color string.
+ * @returns ANSI escape sequence string.
  */
 export function hexToAnsi(hex: string): string {
 	const { r, g, b } = hexToRgb(hex);
@@ -86,6 +108,7 @@ export function hexToAnsi(hex: string): string {
 
 /**
  * Converts a single RGB component to a 2-digit hex string.
+ * Helper for interpolation.
  */
 function toHex(c: number): string {
 	const hex = Math.max(0, Math.min(255, Math.round(c))).toString(16);
@@ -94,6 +117,12 @@ function toHex(c: number): string {
 
 /**
  * Interpolates between two hex colors based on a factor (0 to 1) and returns a Hex color string.
+ * Used for gradients.
+ *
+ * @param color1 - Start color (hex).
+ * @param color2 - End color (hex).
+ * @param factor - Interpolation factor (0.0 to 1.0).
+ * @returns Interpolated Hex color.
  */
 export function interpolateColor(color1: string, color2: string, factor: number): HexColor {
 	const f = Math.max(0, Math.min(1, factor));
@@ -110,7 +139,6 @@ export function interpolateColor(color1: string, color2: string, factor: number)
 // -----------------
 
 const STYLE_CODES: Record<string, string> = {
-	reset: "0",
 	default: "0",
 	bold: "1",
 	dim: "2",
@@ -133,6 +161,10 @@ const STYLE_CODES: Record<string, string> = {
 
 /**
  * Resolves a single Style or array of Styles into an ANSI escape sequence.
+ * Handles hex colors, standard colors, and modifiers.
+ *
+ * @param style - The style or array of styles to resolve.
+ * @returns The resulting ANSI escape sequence string.
  */
 export function resolveStyle(style?: Style | Style[]): string {
 	if (Array.isArray(style)) {
@@ -168,7 +200,10 @@ export function resolveStyle(style?: Style | Style[]): string {
 // -----------------
 
 /**
- * Gets the plain text length of a StyledLine.
+ * Gets the plain text length of a StyledLine (ignoring ANSI codes).
+ *
+ * @param line - The StyledLine to measure.
+ * @returns The length of the text content.
  */
 export function getLineLength(line: StyledLine): number {
 	return line.segments.reduce((acc, seg) => acc + seg.text.length, 0);
@@ -176,6 +211,10 @@ export function getLineLength(line: StyledLine): number {
 
 /**
  * Computes the maximum width among an array of StyledLines.
+ * Useful for aligning columns.
+ *
+ * @param lines - Array of StyledLines.
+ * @returns The maximum line length found.
  */
 export function computeMaxWidth(lines: StyledLine[]): number {
 	return lines.length > 0 ? Math.max(...lines.map(getLineLength)) : 0;
@@ -183,6 +222,11 @@ export function computeMaxWidth(lines: StyledLine[]): number {
 
 /**
  * Pads a StyledLine to a target width by adding an empty segment at the end.
+ *
+ * @param line - The line to pad.
+ * @param targetWidth - The desired minimum width.
+ * @param padStyle - The style to apply to the padding spaces.
+ * @returns A new StyledLine with padding added if necessary.
  */
 export function padLine(line: StyledLine, targetWidth: number, padStyle: Style | Style[]): StyledLine {
 	const currentLength = getLineLength(line);
@@ -219,6 +263,9 @@ export class Printer {
 
 	/**
 	 * Renders an array of StyledLines to the standard output.
+	 * If interactive mode is enabled, it clears the previously printed lines first.
+	 *
+	 * @param lines - The lines to print.
 	 */
 	public print(lines: StyledLine[]): void {
 		let output = this.getClearSequence();
@@ -241,40 +288,62 @@ export class Printer {
 const defaultPrinter = new Printer();
 
 /**
- * Merges two columns of StyledLines into a single layout.
+ * Merges multiple columns of StyledLines into a single layout.
+ * Ensures proper alignment by padding shorter lines.
+ *
+ * @param columns - Array of columns, where each column is an array of StyledLines.
+ * @param separator - String used to separate columns.
+ * @param defaultStyle - Style to apply to the separator and padding.
+ * @param widths - Optional fixed widths for each column.
+ * @returns A single array of StyledLines representing the merged output.
  */
-export function mergeColumns(
-	leftColumn: StyledLine[],
-	rightColumn: StyledLine[],
-	leftWidth: number,
+export function mergeMultipleColumns(
+	columns: StyledLine[][],
 	separator: string,
-	defaultStyle: Style | Style[]
+	defaultStyle: Style | Style[],
+	widths?: number[]
 ): StyledLine[] {
-	const maxLines = Math.max(leftColumn.length, rightColumn.length);
+	if (columns.length === 0) return [];
+
+	const maxLines = Math.max(...columns.map((c) => c.length));
+	const colWidths = columns.map((col, i) => {
+		if (widths?.[i] !== undefined) return widths[i];
+		return computeMaxWidth(col);
+	});
+
 	const output: StyledLine[] = [];
 
 	for (let i = 0; i < maxLines; i++) {
-		const left = padLine(leftColumn[i] || { segments: [] }, leftWidth, defaultStyle);
-		const right = rightColumn[i] || { segments: [] };
-		output.push({
-			segments: [...left.segments, { text: separator, style: defaultStyle }, ...right.segments]
-		});
+		let segments: StyledSegment[] = [];
+		for (let j = 0; j < columns.length; j++) {
+			const line = columns[j][i] || { segments: [] };
+			// Pad if not the last column
+			if (j < columns.length - 1) {
+				const padded = padLine(line, colWidths[j], defaultStyle);
+				segments = [...segments, ...padded.segments, { text: separator, style: defaultStyle }];
+			} else {
+				segments = [...segments, ...line.segments];
+			}
+		}
+		output.push({ segments });
 	}
 	return output;
 }
 
 /**
- * Prints two columns of styled content to the console.
+ * Prints multiple columns of styled content to the console.
+ * A convenience wrapper around `mergeMultipleColumns` and `Printer.print`.
+ *
+ * @param columns - Array of columns to print.
+ * @param options - Layout options (widths, separator, custom printer).
  */
-export function printDualColumn(
-	left: StyledLine[],
-	right: StyledLine[],
-	options: { leftWidth?: number; separator?: string; printer?: Printer } = {}
+export function printColumns(
+	columns: StyledLine[][],
+	options: { widths?: number[]; separator?: string; printer?: Printer } = {}
 ): void {
-	const { leftWidth, separator = "     ", printer = defaultPrinter } = options;
+	const { widths, separator = "     ", printer = defaultPrinter } = options;
 	const defaultStyle = RESET;
-	const finalLeftWidth = leftWidth ?? computeMaxWidth(left);
-	const mergedLines = mergeColumns(left, right, finalLeftWidth, separator, defaultStyle);
+	const mergedLines = mergeMultipleColumns(columns, separator, defaultStyle, widths);
 	printer.print(mergedLines);
 }
 
