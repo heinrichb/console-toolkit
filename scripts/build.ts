@@ -1,6 +1,6 @@
 import { rm } from "node:fs/promises";
-import { Printer, createProgressBar, getDragon, mergeMultipleColumns } from "../src/index";
-import { PrintStyle } from "../src/core/types";
+import { Printer, createProgressBar, getDragon, mergeColumns } from "../src/index";
+import { PrintLine, PrintStyle } from "../src/core/types";
 
 // Setup Printer
 const printer = new Printer({ live: true });
@@ -27,7 +27,7 @@ async function main() {
 
 	for (let i = 0; i < steps.length; i++) {
 		const step = steps[i];
-		const progress = (i) / steps.length;
+		const progress = i / steps.length;
 
 		// Update Progress
 		updateDisplay(step.name, progress, "running");
@@ -36,7 +36,7 @@ async function main() {
 			await step.action();
 			updateDisplay(step.name, (i + 1) / steps.length, "success");
 			// Small delay for visual effect
-			await new Promise(r => setTimeout(r, 100));
+			await new Promise((r) => setTimeout(r, 100));
 		} catch (error) {
 			updateDisplay(step.name, progress, "error");
 			console.error("\n");
@@ -49,7 +49,7 @@ async function main() {
 	const duration = ((endTime - startTime) / 1000).toFixed(2);
 
 	// Final Success Message
-	const successLine = {
+	const successLine: PrintLine = {
 		segments: [
 			{ text: "\n✨ Build completed successfully in ", style: successStyle },
 			{ text: `${duration}s`, style: { color: "#FBBF24", modifiers: ["bold"] } },
@@ -61,7 +61,7 @@ async function main() {
 	const leftCol = getLeftColumn(null, 1, "success");
 	leftCol.push(successLine);
 
-	const merged = mergeMultipleColumns([leftCol, dragonLines], "    ", undefined);
+	const merged = mergeColumns([leftCol, dragonLines], "    ", undefined);
 
 	printer.print({
 		lines: merged
@@ -69,8 +69,8 @@ async function main() {
 	console.log(""); // New line at end
 }
 
-function getLeftColumn(currentStepName: string | null, progress: number, status: "running" | "success" | "error") {
-	const titleLine = {
+function getLeftColumn(currentStepName: string | null, progress: number, status: "running" | "success" | "error"): PrintLine[] {
+	const titleLine: PrintLine = {
 		segments: [
 			{ text: "📦 ", style: { modifiers: ["bold"] } },
 			{ text: "Console Toolkit Build Process", style: titleStyle }
@@ -81,14 +81,14 @@ function getLeftColumn(currentStepName: string | null, progress: number, status:
 		segments: [{ text: "─".repeat(50), style: borderStyle }]
 	};
 
-	const lines = [titleLine, separator, { segments: [] }];
+	const lines: PrintLine[] = [titleLine, separator, { segments: [] }];
 
 	// Completed steps
 	const completedSteps = currentStepName
-		? steps.filter((_, idx) => idx < steps.findIndex(s => s.name === currentStepName))
+		? steps.filter((_, idx) => idx < steps.findIndex((s) => s.name === currentStepName))
 		: steps; // If currentStepName is null (finished), all are completed
 
-	completedSteps.forEach(s => {
+	completedSteps.forEach((s) => {
 		lines.push({
 			segments: [
 				{ text: "✔ ", style: successStyle },
@@ -149,13 +149,12 @@ function updateDisplay(currentStepName: string, progress: number, status: "runni
 
 	// Merge left column with dragon
 	// We might need to pad the left column if it's shorter than the dragon to keep the dragon stable
-	const merged = mergeMultipleColumns([leftCol, dragonLines], "    ", undefined);
+	const merged = mergeColumns([leftCol, dragonLines], "    ", undefined);
 
 	printer.print({
 		lines: merged
 	});
 }
-
 
 async function cleanDist() {
 	await rm("dist", { recursive: true, force: true });
@@ -168,7 +167,7 @@ async function buildReadable() {
 		target: "node",
 		format: "esm",
 		minify: false,
-		sourcemap: "none",
+		sourcemap: "none"
 	});
 
 	if (!result.success) {
@@ -184,7 +183,7 @@ async function buildMinified() {
 		format: "esm",
 		minify: true,
 		naming: "[dir]/[name].min.js",
-		sourcemap: "none",
+		sourcemap: "none"
 	});
 
 	if (!minResult.success) {
@@ -195,7 +194,7 @@ async function buildMinified() {
 async function generateTypes() {
 	const tsc = Bun.spawn(["bun", "x", "tsc", "-p", "tsconfig.build.json", "--emitDeclarationOnly", "--outDir", "dist"], {
 		stdout: "pipe",
-		stderr: "pipe",
+		stderr: "pipe"
 	});
 
 	const exitCode = await tsc.exited;
