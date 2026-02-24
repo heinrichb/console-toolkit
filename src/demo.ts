@@ -58,7 +58,7 @@ export async function runDemo() {
 	console.log("--- Dragon Gradient Preset ---");
 	const dragon = getDragon("#EF4444", "#FDE047");
 	const iceDragon = getDragon("#3B82F6", "#06B6D4");
-	printColumns([dragon, iceDragon], { separator: "   ", printer: staticPrinter });
+	printColumns([dragon, iceDragon], { printer: staticPrinter });
 	console.log("\n");
 
 	// 4. Interactive Progress Bar Demo

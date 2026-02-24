@@ -74,7 +74,7 @@ async function main() {
 	const leftCol = getLeftColumn(null, 1, "success");
 	leftCol.push(successLine);
 
-	printColumns([leftCol, dragon], { separator: "         ", printer });
+	printColumns([leftCol, dragon], { printer });
 }
 
 function getLeftColumn(currentStepName: string | null, progress: number, status: "running" | "success" | "error") {
@@ -145,11 +145,7 @@ function getLeftColumn(currentStepName: string | null, progress: number, status:
 function updateDisplay(currentStepName: string, progress: number, status: "running" | "success" | "error") {
 	const leftCol = getLeftColumn(currentStepName, progress, status);
 
-	const merged = mergeColumns([leftCol, dragon], "    ", undefined);
-
-	printer.print({
-		lines: merged
-	});
+	printColumns([leftCol, dragon], { printer });
 }
 
 async function cleanDist() {
