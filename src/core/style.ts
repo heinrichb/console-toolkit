@@ -125,7 +125,7 @@ export function getGradientColor(colors: Color[], factor: number): string {
 	// Map factor to segments between colors
 	// e.g. 3 colors: [0, 0.5, 1]. factor 0.25 is in first segment (0.5 of way through)
 	const segmentLength = 1 / (colors.length - 1);
-	// Inferred as number, no need to annotate
+
 	const segmentIndex = Math.min(Math.floor(f / segmentLength), colors.length - 2);
 	const segmentFactor = (f - segmentIndex * segmentLength) / segmentLength;
 
@@ -176,10 +176,7 @@ export function resolveStyle(style?: PrintStyle, gradientFactor = 0): string {
 		if (Array.isArray(style.color)) {
 			// Gradient
 			const hex = getGradientColor(style.color, gradientFactor);
-			ansi += hex; // hex is already ansi from getGradientColor? No wait.
-			// getGradientColor returns ansi string? Yes.
-			// Let's check getGradientColor implementation.
-			// It calls resolveColorToAnsi at the end. Correct.
+			ansi += hex;
 		} else {
 			// Solid
 			ansi += resolveColorToAnsi(style.color);

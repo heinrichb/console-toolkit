@@ -44,14 +44,12 @@ export async function runDemo() {
 
 	// 2. Block Vertical Gradient Demo
 	console.log("--- Block Vertical Gradient Demo ---");
-	// This demonstrates applying a gradient to a block of lines.
-	// The lines inherit the gradient color based on their vertical position.
 	const gradientBlockLines: PrintLine[] = Array.from({ length: 10 }, (_, i) => ({
 		segments: [{ text: `Line ${i + 1} - Inherits Gradient` }]
 	}));
 
 	staticPrinter.print({
-		style: { color: ["#EF4444", "#3B82F6"] }, // Red to Blue Vertical Gradient
+		style: { color: ["#EF4444", "#3B82F6"] },
 		lines: gradientBlockLines
 	});
 	console.log("\n");
@@ -85,12 +83,9 @@ export async function runDemo() {
 			percentageStyle: progressColor
 		});
 
-		// Gradient Bar (Horizontal Gradient on Line)
+		// Gradient Bar
 		const gradientHex = getProgressBarColor(factor);
-		const gradientStyle: PrintStyle = { color: gradientHex }; // Dynamic solid color for demo simplicity here
-		// Actually, let's use a real horizontal gradient on the bar!
-		// But createProgressBar currently takes PrintStyle which applies to segments.
-		// If we pass { color: [c1, c2] }, it will gradient the segment.
+		const gradientStyle: PrintStyle = { color: gradientHex };
 
 		const complexGradientBar = createProgressBar({
 			progress: factor,
@@ -101,7 +96,7 @@ export async function runDemo() {
 			emptyChar: "░",
 			startStyle: gradientStyle,
 			endStyle: gradientStyle,
-			fillStyle: { color: ["#3B82F6", "#EC4899"] }, // Blue to Pink Gradient on the filled part!
+			fillStyle: { color: ["#3B82F6", "#EC4899"] },
 			emptyStyle: { color: "gray" },
 			percentageStyle: { modifiers: ["bold"], color: gradientHex }
 		});
@@ -120,27 +115,24 @@ export async function runDemo() {
 
 	// 5. Spinners Demo
 	console.log("--- Spinners Demo ---");
-	const spinnerDots = new Spinner({ frames: SPINNERS.dots, interval: 80 });
-	const spinnerLines = new Spinner({ frames: SPINNERS.lines, interval: 100 });
+
+	const spinnerTypes = Object.keys(SPINNERS) as Array<keyof typeof SPINNERS>;
+	const spinners = spinnerTypes.map((type) => ({
+		type,
+		instance: new Spinner({ frames: SPINNERS[type], interval: 80 })
+	}));
 
 	const spinnerPrinter = new Printer({ live: true });
 	const spinnerStart = Date.now();
 
 	while (Date.now() - spinnerStart < 3000) {
-		const lines: PrintLine[] = [
-			{
-				segments: [
-					{ text: "Dots:   ", style: { modifiers: ["dim"] } },
-					{ text: spinnerDots.getFrame(), style: { color: "cyan" } }
-				]
-			},
-			{
-				segments: [
-					{ text: "Lines:  ", style: { modifiers: ["dim"] } },
-					{ text: spinnerLines.getFrame(), style: { color: "yellow" } }
-				]
-			}
-		];
+		const lines: PrintLine[] = spinners.map((s) => ({
+			segments: [
+				{ text: `${s.type.charAt(0).toUpperCase() + s.type.slice(1)}:`.padEnd(10), style: { modifiers: ["dim"] } },
+				{ text: s.instance.getFrame(), style: { color: "cyan" } }
+			]
+		}));
+
 		spinnerPrinter.print({ lines });
 		await new Promise((resolve) => setTimeout(resolve, 50));
 	}
