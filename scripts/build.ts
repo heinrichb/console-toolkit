@@ -1,9 +1,10 @@
 import { rm } from "node:fs/promises";
-import { Printer, createProgressBar, getDragon, mergeColumns } from "../src/index";
-import { PrintLine, PrintStyle } from "../src/core/types";
+import { Printer, createProgressBar, getDragon, mergeMultipleColumns, Spinner, SPINNERS } from "../src/index";
+import { PrintStyle } from "../src/core/types";
 
 // Setup Printer
 const printer = new Printer({ live: true });
+const spinner = new Spinner({ frames: SPINNERS.dots, interval: 80 });
 
 const stepStyle: PrintStyle = { color: "#3B82F6", modifiers: ["bold"] }; // Blue
 const successStyle: PrintStyle = { color: "#10B981", modifiers: ["bold"] }; // Green
@@ -27,18 +28,33 @@ async function main() {
 
 	for (let i = 0; i < steps.length; i++) {
 		const step = steps[i];
-		const progress = i / steps.length;
+		const progressStart = i / steps.length;
+		const progressEnd = (i + 1) / steps.length;
 
-		// Update Progress
-		updateDisplay(step.name, progress, "running");
+		// Start step execution
+		const stepPromise = step.action();
+
+		// Animate spinner while waiting
+		let isStepComplete = false;
+		const animationLoop = (async () => {
+			while (!isStepComplete) {
+				updateDisplay(step.name, progressStart, "running");
+				await new Promise((resolve) => setTimeout(resolve, 80));
+			}
+		})();
 
 		try {
-			await step.action();
-			updateDisplay(step.name, (i + 1) / steps.length, "success");
-			// Small delay for visual effect
+			await stepPromise;
+			isStepComplete = true;
+			await animationLoop; // Ensure loop finishes
+
+			// Show success state briefly
+			updateDisplay(step.name, progressEnd, "success");
 			await new Promise((r) => setTimeout(r, 100));
+
 		} catch (error) {
-			updateDisplay(step.name, progress, "error");
+			isStepComplete = true;
+			updateDisplay(step.name, progressStart, "error");
 			console.error("\n");
 			console.error(error);
 			process.exit(1);
@@ -48,8 +64,7 @@ async function main() {
 	const endTime = performance.now();
 	const duration = ((endTime - startTime) / 1000).toFixed(2);
 
-	// Final Success Message
-	const successLine: PrintLine = {
+	const successLine = {
 		segments: [
 			{ text: "\n✨ Build completed successfully in ", style: successStyle },
 			{ text: `${duration}s`, style: { color: "#FBBF24", modifiers: ["bold"] } },
@@ -57,20 +72,19 @@ async function main() {
 		]
 	};
 
-	// Final display with success message (appended to the left column)
 	const leftCol = getLeftColumn(null, 1, "success");
 	leftCol.push(successLine);
 
-	const merged = mergeColumns([leftCol, dragonLines], "    ", undefined);
+	const merged = mergeMultipleColumns([leftCol, dragonLines], "    ", undefined);
 
 	printer.print({
 		lines: merged
 	});
-	console.log(""); // New line at end
+	console.log("");
 }
 
-function getLeftColumn(currentStepName: string | null, progress: number, status: "running" | "success" | "error"): PrintLine[] {
-	const titleLine: PrintLine = {
+function getLeftColumn(currentStepName: string | null, progress: number, status: "running" | "success" | "error") {
+	const titleLine = {
 		segments: [
 			{ text: "📦 ", style: { modifiers: ["bold"] } },
 			{ text: "Console Toolkit Build Process", style: titleStyle }
@@ -81,14 +95,13 @@ function getLeftColumn(currentStepName: string | null, progress: number, status:
 		segments: [{ text: "─".repeat(50), style: borderStyle }]
 	};
 
-	const lines: PrintLine[] = [titleLine, separator, { segments: [] }];
+	const lines = [titleLine, separator, { segments: [] }];
 
-	// Completed steps
 	const completedSteps = currentStepName
-		? steps.filter((_, idx) => idx < steps.findIndex((s) => s.name === currentStepName))
-		: steps; // If currentStepName is null (finished), all are completed
+		? steps.filter((_, idx) => idx < steps.findIndex(s => s.name === currentStepName))
+		: steps;
 
-	completedSteps.forEach((s) => {
+	completedSteps.forEach(s => {
 		lines.push({
 			segments: [
 				{ text: "✔ ", style: successStyle },
@@ -97,7 +110,6 @@ function getLeftColumn(currentStepName: string | null, progress: number, status:
 		});
 	});
 
-	// Current step (if any)
 	if (currentStepName && status !== "success") {
 		const progressBar = createProgressBar({
 			progress,
@@ -113,7 +125,7 @@ function getLeftColumn(currentStepName: string | null, progress: number, status:
 			percentageStyle: { color: "#60A5FA" }
 		});
 
-		const statusIcon = status === "running" ? "⏳" : "✖";
+		const statusIcon = status === "running" ? spinner.getFrame() : "✖";
 		const statusColor = status === "running" ? stepStyle : errorStyle;
 
 		lines.push({
@@ -124,15 +136,6 @@ function getLeftColumn(currentStepName: string | null, progress: number, status:
 			]
 		});
 	} else if (currentStepName && status === "success") {
-		// Just marked as success, waiting for next loop to move it to completed
-		// But in our loop logic, we call updateDisplay("step", 1, "success") after finishing.
-		// So we should display it as completed here or just let the "completedSteps" logic handle it?
-		// Actually, if we pass "success", we usually want to show it as done.
-		// However, our loop logic is: update(running) -> await -> update(success) -> next loop.
-
-		// To keep it simple, if status is success, we treat it as completed in the UI.
-		// The `completedSteps` filter above excludes the current one. So we add it here manually if needed.
-
 		lines.push({
 			segments: [
 				{ text: "✔ ", style: successStyle },
@@ -147,14 +150,13 @@ function getLeftColumn(currentStepName: string | null, progress: number, status:
 function updateDisplay(currentStepName: string, progress: number, status: "running" | "success" | "error") {
 	const leftCol = getLeftColumn(currentStepName, progress, status);
 
-	// Merge left column with dragon
-	// We might need to pad the left column if it's shorter than the dragon to keep the dragon stable
-	const merged = mergeColumns([leftCol, dragonLines], "    ", undefined);
+	const merged = mergeMultipleColumns([leftCol, dragonLines], "    ", undefined);
 
 	printer.print({
 		lines: merged
 	});
 }
+
 
 async function cleanDist() {
 	await rm("dist", { recursive: true, force: true });
@@ -167,7 +169,7 @@ async function buildReadable() {
 		target: "node",
 		format: "esm",
 		minify: false,
-		sourcemap: "none"
+		sourcemap: "none",
 	});
 
 	if (!result.success) {
@@ -183,7 +185,7 @@ async function buildMinified() {
 		format: "esm",
 		minify: true,
 		naming: "[dir]/[name].min.js",
-		sourcemap: "none"
+		sourcemap: "none",
 	});
 
 	if (!minResult.success) {
@@ -194,7 +196,7 @@ async function buildMinified() {
 async function generateTypes() {
 	const tsc = Bun.spawn(["bun", "x", "tsc", "-p", "tsconfig.build.json", "--emitDeclarationOnly", "--outDir", "dist"], {
 		stdout: "pipe",
-		stderr: "pipe"
+		stderr: "pipe",
 	});
 
 	const exitCode = await tsc.exited;

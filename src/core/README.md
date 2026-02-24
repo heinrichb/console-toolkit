@@ -118,13 +118,13 @@ printColumns([col1, col2], {
 });
 ```
 
-### `mergeColumns`
+### `mergeMultipleColumns`
 
-If you need the `PrintLine` objects instead of printing directly, use `mergeColumns`. This is useful if you want to nest columns inside other structures.
+If you need the `PrintLine` objects instead of printing directly, use `mergeMultipleColumns`. This is useful if you want to nest columns inside other structures.
 
 ```typescript
-import { mergeColumns } from "@heinrichb/console-toolkit";
+import { mergeMultipleColumns } from "@heinrichb/console-toolkit";
 
-const mergedLines = mergeColumns([col1, col2]);
+const mergedLines = mergeMultipleColumns([col1, col2]);
 // mergedLines is now a single array of PrintLines ready for the Printer
 ```

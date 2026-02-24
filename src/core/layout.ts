@@ -16,7 +16,7 @@ import { Printer } from "./printer";
  * @param widths - Optional fixed widths for each column.
  * @returns A single array of PrintLines representing the merged output.
  */
-export function mergeColumns(
+export function mergeMultipleColumns(
 	columns: PrintLine[][],
 	separator = "     ",
 	defaultStyle?: PrintStyle,
@@ -53,7 +53,7 @@ export function mergeColumns(
 
 /**
  * Prints multiple columns of styled content to the console.
- * A convenience wrapper around `mergeColumns` and `Printer.print`.
+ * A convenience wrapper around `mergeMultipleColumns` and `Printer.print`.
  *
  * @param columns - Array of columns to print.
  * @param options - Layout options (widths, separator, custom printer).
@@ -63,6 +63,6 @@ export function printColumns(
 	options: { widths?: number[]; separator?: string; printer?: Printer } = {}
 ): void {
 	const { widths, separator = "     ", printer = new Printer() } = options;
-	const mergedLines = mergeColumns(columns, separator, undefined, widths);
+	const mergedLines = mergeMultipleColumns(columns, separator, undefined, widths);
 	printer.print({ lines: mergedLines });
 }
