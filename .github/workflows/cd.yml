@@ -1,0 +1,130 @@
+name: CD
+
+on:
+    push:
+        branches:
+            - main
+            # - develop # Uncomment to enable publishing for develop
+
+jobs:
+    publish:
+        name: Publish to NPM
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write # Required for pushing version bumps
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # Required to access git history for versioning logic
+
+            - uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Install Dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Build
+              run: bun run build
+
+            - name: Automated Version Bump
+              if: github.ref == 'refs/heads/main'
+              run: |
+                  # Configure git
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
+                  # --- Versioning Logic ---
+                  # 1. Get the last commit message
+                  LAST_COMMIT_MSG=$(git log -1 --pretty=%B)
+                  echo "Last commit message: $LAST_COMMIT_MSG"
+
+                  # 2. Check for Manual Version Change in last commit
+                  MANUAL_BUMP=false
+                  # Check if package.json was modified
+                  if git diff HEAD^ HEAD --name-only | grep -q "package.json"; then
+                    # Check if version field specifically was changed
+                    # -U0 removes context lines
+                    # grep "^\+" looks for added lines starting with +
+                    if git diff HEAD^ HEAD -U0 -- package.json | grep "^\+" | grep -q "\"version\":"; then
+                        echo "Manual version bump detected."
+                        MANUAL_BUMP=true
+                    fi
+                  fi
+
+                  if [ "$MANUAL_BUMP" = false ]; then
+                    # 3. Determine bump type (if no manual change)
+                    BUMP_TYPE="patch" # Default to patch
+
+                    if echo "$LAST_COMMIT_MSG" | grep -q "Merge pull request"; then
+                        echo "Merge detected."
+                        # Check if source branch was develop
+                        # Look for "/develop" (e.g. "Merge pull request #1 from user/develop")
+                        # or " develop" at the end of a sentence (e.g. "Merge branch 'develop'")
+                        if echo "$LAST_COMMIT_MSG" | grep -q "/develop" || echo "$LAST_COMMIT_MSG" | grep -q " develop$"; then
+                            echo "Source branch was 'develop'. Bumping MINOR version."
+                            BUMP_TYPE="minor"
+                        else
+                            echo "Standard merge detected. Bumping PATCH version."
+                            BUMP_TYPE="patch"
+                        fi
+                    else
+                        echo "Direct push detected. Bumping PATCH version."
+                        BUMP_TYPE="patch"
+                    fi
+
+                    # 4. Apply the version bump
+                    echo "Applying $BUMP_TYPE version bump..."
+                    npm version $BUMP_TYPE --no-git-tag-version
+
+                    # 5. Get the new version
+                    NEW_VERSION=$(node -p "require('./package.json').version")
+                    echo "New version: $NEW_VERSION"
+
+                    # 6. Update Lockfile
+                    # bun install will update bun.lock to match the new version in package.json
+                    echo "Updating lockfile..."
+                    bun install
+
+                    # 7. Commit
+                    git add package.json bun.lock*
+                    git commit -m "chore(release): bump version to $NEW_VERSION [skip ci]"
+                  else
+                    NEW_VERSION=$(node -p "require('./package.json').version")
+                    echo "Using manually bumped version: $NEW_VERSION"
+                  fi
+
+                  # 8. Tag and Push (Common for both manual and auto)
+                  # Create tag if it doesn't exist
+                  if git rev-parse "v$NEW_VERSION" >/dev/null 2>&1; then
+                    echo "Tag v$NEW_VERSION already exists."
+                  else
+                    echo "Creating tag v$NEW_VERSION"
+                    git tag "v$NEW_VERSION"
+                  fi
+
+                  # Push changes and tags
+                  git push origin HEAD:main
+                  git push origin "v$NEW_VERSION"
+
+            - name: Sync Develop Branch
+              if: github.ref == 'refs/heads/main' && success()
+              run: |
+                  echo "Syncing develop branch with main..."
+                  git fetch origin develop || echo "Remote develop branch not found or accessible."
+                  git push origin main:develop --force
+              continue-on-error: true # Don't fail the build if this optional sync fails
+
+            - name: Set NPM Tag
+              id: set_tag
+              run: |
+                  if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+                    echo "NPM_TAG=beta" >> $GITHUB_ENV
+                  else
+                    echo "NPM_TAG=latest" >> $GITHUB_ENV
+                  fi
+
+            - name: Publish
+              run: npm publish --tag ${{ env.NPM_TAG }}
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

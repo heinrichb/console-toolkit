@@ -55,7 +55,16 @@ Before submitting *any* changes:
     ```
     **Do not submit code unless 100% coverage is maintained and all checks pass.**
 
-## 4. Task Management Standards (TODO.md)
+## 4. Versioning Policy
+
+We employ an automated versioning strategy for the `main` branch to simplify releases.
+
+*   **Manual Override:** If the version in `package.json` is manually updated in a PR, the automation will respect it and skip auto-bumping. This is required for Major version bumps (e.g., `1.0.0` -> `2.0.0`).
+*   **Merge `develop` → `main`:** Automatically bumps the **Minor** version (e.g., `0.1.0` -> `0.2.0`). This signifies a release of accumulated features.
+*   **Direct Push / Hotfix to `main`:** Automatically bumps the **Patch** version (e.g., `0.1.0` -> `0.1.1`).
+*   **Develop Branch Sync:** After a successful release on `main`, the `develop` branch is automatically force-updated to match `main`. This ensures `develop` always starts fresh from the latest stable state.
+
+## 5. Task Management Standards (TODO.md)
 
 This section defines how to structure `TODO.md` to ensure efficient hand-offs between agent sessions.
 
@@ -76,7 +85,7 @@ This section defines how to structure `TODO.md` to ensure efficient hand-offs be
     **Difficulty:** Low/Medium/High
     ```
 
-## 5. Documentation Maintenance
+## 6. Documentation Maintenance
 * **Dynamic Document:** This file (`AGENTS.md`) is the source of truth for our standards. Keep it minimal but impactful.
 * **Updates:** If you receive a new instruction or clarify an ambiguity that would help a future agent, update this file immediately.
 * **DRY:** Do not repeat information found here in your chat context if it's already documented. Do not clutter this file with redundant info.

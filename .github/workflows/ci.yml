@@ -1,0 +1,32 @@
+name: CI
+
+on:
+    push:
+        branches: [main, develop]
+    pull_request:
+        branches: [main, develop]
+
+jobs:
+    quality-gate:
+        name: Quality Gate
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version: latest
+
+            - name: Install Dependencies
+              run: bun install --frozen-lockfile
+
+            - name: Formatting Check
+              run: bun run format:check
+
+            - name: Linting Check
+              run: bun run lint
+
+            - name: Type Check & Build
+              run: bun run build
+
+            - name: Run Unit Tests with 100% Coverage
+              run: bun run test:coverage
