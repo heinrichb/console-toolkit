@@ -1,4 +1,14 @@
-import { printDualColumn, getDragonLines, Printer, interpolateColor, StyledLine, createProgressBar } from "./index";
+import {
+	printDualColumn,
+	getDragonLines,
+	Printer,
+	interpolateColor,
+	StyledLine,
+	createProgressBar,
+	Spinner,
+	SPINNERS,
+	HexColor
+} from "./index";
 import pkg from "../package.json";
 
 /**
@@ -6,8 +16,18 @@ import pkg from "../package.json";
  * bun run src/demo.ts
  */
 
+function getProgressBarColor(factor: number): HexColor {
+	// Multi-stop gradient: Blue -> Cyan -> Green
+	if (factor < 0.5) {
+		return interpolateColor("#3B82F6", "#06B6D4", factor * 2);
+	} else {
+		return interpolateColor("#06B6D4", "#10B981", (factor - 0.5) * 2);
+	}
+}
+
 export async function runDemo() {
 	console.clear();
+	const staticPrinter = new Printer();
 
 	// 1. Test Static Dual Column Print
 	console.log("--- Static Dual Column Demo ---");
@@ -34,13 +54,12 @@ export async function runDemo() {
 	// 2. Test the Dragon Gradient Preset
 	console.log("--- Dragon Gradient Preset ---");
 	const dragon = getDragonLines("#EF4444", "#FDE047");
-	const printer = new Printer();
-	printer.print(dragon);
+	staticPrinter.print(dragon);
 	console.log("\n");
 
 	// 3. Test Progress Bar
 	console.log("--- Interactive Progress Bar Demo ---");
-	const interactivePrinter = new Printer({ interactive: true });
+	const interactiveProgressPrinter = new Printer({ interactive: true });
 	const gray = "#4B5563";
 
 	for (let i = 0; i <= 100; i += 2) {
@@ -58,12 +77,110 @@ export async function runDemo() {
 			percentageStyle: progressColor
 		});
 
-		interactivePrinter.print([progressLine]);
-		await new Promise((resolve) => setTimeout(resolve, 20));
+		const factor = i / 100;
+		const gradientColor = getProgressBarColor(factor);
+
+		const gradientBar = createProgressBar({
+			progress: factor,
+			width: 40,
+			startChar: "▕",
+			endChar: "▏",
+			fillChar: "█",
+			emptyChar: "░",
+			startStyle: gradientColor,
+			endStyle: gradientColor,
+			fillStyle: gradientColor,
+			emptyStyle: "gray",
+			percentageStyle: ["bold", gradientColor]
+		});
+
+		const sharpBar = createProgressBar({
+			progress: factor,
+			width: 40,
+			startChar: "[",
+			endChar: "]",
+			fillChar: "#",
+			emptyChar: "-",
+			style: "white",
+			fillStyle: "green",
+			emptyStyle: "dim"
+		});
+
+		const noStyleBar = createProgressBar({
+			progress: factor,
+			width: 40,
+			startChar: "<",
+			endChar: ">",
+			fillChar: "=",
+			emptyChar: " "
+		});
+
+		interactiveProgressPrinter.print([
+			progressLine,
+			{ segments: [] },
+			{ segments: [{ text: "Gradient: ", style: "bold" }] },
+			gradientBar,
+			{ segments: [] },
+			{ segments: [{ text: "Sharp:    ", style: "bold" }] },
+			sharpBar,
+			{ segments: [] },
+			{ segments: [{ text: "Minimal:  ", style: "bold" }] },
+			noStyleBar
+		]);
+		await new Promise((resolve) => setTimeout(resolve, 30));
 	}
 	console.log("\n");
 
-	// 4. Style Codes Demo
+	// 4. Spinners Demo
+	console.log("--- Spinners Demo ---");
+	const spinnerDots = new Spinner({ frames: SPINNERS.dots, interval: 80 });
+	const spinnerLines = new Spinner({ frames: SPINNERS.lines, interval: 100 });
+	const spinnerArrows = new Spinner({ frames: SPINNERS.arrows, interval: 120 });
+	const spinnerCircle = new Spinner({ frames: SPINNERS.circle, interval: 150 });
+	const spinnerSquare = new Spinner({ frames: SPINNERS.square, interval: 200 });
+
+	const interactiveSpinnerPrinter = new Printer({ interactive: true });
+	const startTime = Date.now();
+
+	while (Date.now() - startTime < 3000) {
+		const lines: StyledLine[] = [
+			{
+				segments: [
+					{ text: "Dots:   ", style: "dim" },
+					{ text: spinnerDots.getFrame(), style: "cyan" }
+				]
+			},
+			{
+				segments: [
+					{ text: "Lines:  ", style: "dim" },
+					{ text: spinnerLines.getFrame(), style: "yellow" }
+				]
+			},
+			{
+				segments: [
+					{ text: "Arrows: ", style: "dim" },
+					{ text: spinnerArrows.getFrame(), style: "green" }
+				]
+			},
+			{
+				segments: [
+					{ text: "Circle: ", style: "dim" },
+					{ text: spinnerCircle.getFrame(), style: "magenta" }
+				]
+			},
+			{
+				segments: [
+					{ text: "Square: ", style: "dim" },
+					{ text: spinnerSquare.getFrame(), style: "blue" }
+				]
+			}
+		];
+		interactiveSpinnerPrinter.print(lines);
+		await new Promise((resolve) => setTimeout(resolve, 50));
+	}
+	console.log("\n");
+
+	// 5. Style Codes Demo
 	console.log("--- Style Codes Demo ---");
 
 	const styles = [
@@ -93,8 +210,6 @@ export async function runDemo() {
 		]
 	}));
 
-	const stylePrinter = new Printer();
-	stylePrinter.print(styleLines);
-
+	staticPrinter.print(styleLines);
 	console.log("\n✨ Demo Complete!");
 }
