@@ -9,9 +9,10 @@ describe("Demo Script", () => {
 	const originalTimeout = global.setTimeout;
 
 	beforeEach(() => {
+		// Mocking setTimeout requires unknown casting due to return type mismatch in Bun (void vs Timer)
 		global.setTimeout = ((fn: () => void) => {
 			fn();
-		}) as any;
+		}) as unknown as typeof setTimeout;
 	});
 
 	afterEach(() => {
@@ -22,7 +23,8 @@ describe("Demo Script", () => {
 	});
 
 	test("runDemo executes correctly", async () => {
-		expect(runDemo()).resolves.toBeUndefined();
+		// Just await the function call; we expect it not to throw.
+		await runDemo();
 
 		expect(clearSpy).toHaveBeenCalled();
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Static Dual Column Demo"));

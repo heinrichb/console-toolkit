@@ -12,7 +12,10 @@ This file contains the core principles, workflows, and standards for working on 
 
 ### Code Quality
 * **Type Safety:** Do not use `any`. Use proper TypeScript interfaces and types.
-* **Linting & Formatting:** Do not disable linter rules without a very strong, documented reason. Use `bun run lint` and `bun run format:check` to check for issues.
+* **Linting & Formatting:**
+    * Do not disable linter rules without a very strong, documented reason.
+    * Use `bun run lint` and `bun run format:check` to check for issues.
+    * `eslint-disable` comments should be a last resort and must be accompanied by a comment explaining why the suppression is necessary.
 * **Runtime Independence:** This library is intended for Node.js and Bun environments. Ensure standard console tools (`process.stdout.write`, `console.log`) are utilized safely and efficiently.
 
 ### Documentation
