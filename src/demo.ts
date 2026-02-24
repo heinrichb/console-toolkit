@@ -39,7 +39,7 @@ export async function runDemo() {
 		{ segments: [{ text: "Testing live output...", style: yellow }] }
 	];
 
-	printColumns([leftContent, rightContent], { separator: "  =>  " });
+	printColumns([leftContent, rightContent], { separator: "  =>  ", printer: staticPrinter });
 	console.log("\n");
 
 	// 2. Block Vertical Gradient Demo
@@ -57,7 +57,8 @@ export async function runDemo() {
 	// 3. Dragon Gradient Preset
 	console.log("--- Dragon Gradient Preset ---");
 	const dragon = getDragon("#EF4444", "#FDE047");
-	staticPrinter.print({ lines: dragon });
+	const iceDragon = getDragon("#3B82F6", "#06B6D4");
+	printColumns([dragon, iceDragon], { separator: "   ", printer: staticPrinter });
 	console.log("\n");
 
 	// 4. Interactive Progress Bar Demo
