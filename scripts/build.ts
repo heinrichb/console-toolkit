@@ -1,5 +1,5 @@
 import { rm } from "node:fs/promises";
-import { Printer, createProgressBar } from "../src/index";
+import { Printer, createProgressBar, getDragon, mergeMultipleColumns } from "../src/index";
 import { PrintStyle } from "../src/core/types";
 
 // Setup Printer
@@ -10,6 +10,7 @@ const successStyle: PrintStyle = { color: "#10B981", modifiers: ["bold"] }; // G
 const errorStyle: PrintStyle = { color: "#EF4444", modifiers: ["bold"] }; // Red
 const dimStyle: PrintStyle = { color: "#9CA3AF", modifiers: ["dim"] }; // Gray
 const borderStyle: PrintStyle = { color: "#6366F1" }; // Indigo
+const titleStyle: PrintStyle = { color: ["#3B82F6", "#8B5CF6"], modifiers: ["bold", "underline"] };
 
 const steps = [
 	{ name: "Cleaning dist...", action: cleanDist },
@@ -18,23 +19,10 @@ const steps = [
 	{ name: "Generating types...", action: generateTypes }
 ];
 
+const dragonLines = getDragon("#EF4444", "#FDE047");
+
 async function main() {
 	console.clear();
-
-	// Title
-	const titleLine = {
-		segments: [
-			{ text: "📦 ", style: { modifiers: ["bold"] } },
-			{ text: "Console Toolkit Build Process", style: { color: ["#3B82F6", "#8B5CF6"], modifiers: ["bold", "underline"] } }
-		]
-	};
-
-	const separator = {
-		segments: [{ text: "─".repeat(50), style: borderStyle }]
-	};
-
-	printer.print({ lines: [titleLine, separator, { segments: [] }] });
-
 	const startTime = performance.now();
 
 	for (let i = 0; i < steps.length; i++) {
@@ -69,63 +57,23 @@ async function main() {
 		]
 	};
 
+	// Final display with success message (appended to the left column)
+	const leftCol = getLeftColumn(null, 1, "success");
+	leftCol.push(successLine);
+
+	const merged = mergeMultipleColumns([leftCol, dragonLines], "    ", undefined);
+
 	printer.print({
-		lines: [
-			titleLine,
-			separator,
-			{ segments: [] },
-			...steps.map(s => ({
-				segments: [
-					{ text: "✔ ", style: successStyle },
-					{ text: s.name, style: dimStyle }
-				]
-			})),
-			successLine
-		]
+		lines: merged
 	});
 	console.log(""); // New line at end
 }
 
-function updateDisplay(currentStepName: string, progress: number, status: "running" | "success" | "error") {
-	const progressBar = createProgressBar({
-		progress,
-		width: 30,
-		startChar: "▕",
-		endChar: "▏",
-		fillChar: "█",
-		emptyChar: "░",
-		startStyle: borderStyle,
-		endStyle: borderStyle,
-		fillStyle: { color: ["#3B82F6", "#8B5CF6"] },
-		emptyStyle: dimStyle,
-		percentageStyle: { color: "#60A5FA" }
-	});
-
-	const statusIcon = status === "running" ? "⏳" : status === "success" ? "✔" : "✖";
-	const statusColor = status === "running" ? stepStyle : status === "success" ? successStyle : errorStyle;
-
-	const statusLine = {
-		segments: [
-			{ text: `${statusIcon} `, style: statusColor },
-			{ text: currentStepName.padEnd(25), style: status === "running" ? { modifiers: ["bold"] } : dimStyle },
-			...progressBar.segments
-		]
-	};
-
-	// We reprint the completed steps above the current one
-	const completedLines = steps
-		.filter((_, idx) => idx < steps.findIndex(s => s.name === currentStepName))
-		.map(s => ({
-			segments: [
-				{ text: "✔ ", style: successStyle },
-				{ text: s.name, style: dimStyle }
-			]
-		}));
-
+function getLeftColumn(currentStepName: string | null, progress: number, status: "running" | "success" | "error") {
 	const titleLine = {
 		segments: [
 			{ text: "📦 ", style: { modifiers: ["bold"] } },
-			{ text: "Console Toolkit Build Process", style: { color: ["#3B82F6", "#8B5CF6"], modifiers: ["bold", "underline"] } }
+			{ text: "Console Toolkit Build Process", style: titleStyle }
 		]
 	};
 
@@ -133,14 +81,78 @@ function updateDisplay(currentStepName: string, progress: number, status: "runni
 		segments: [{ text: "─".repeat(50), style: borderStyle }]
 	};
 
+	const lines = [titleLine, separator, { segments: [] }];
+
+	// Completed steps
+	const completedSteps = currentStepName
+		? steps.filter((_, idx) => idx < steps.findIndex(s => s.name === currentStepName))
+		: steps; // If currentStepName is null (finished), all are completed
+
+	completedSteps.forEach(s => {
+		lines.push({
+			segments: [
+				{ text: "✔ ", style: successStyle },
+				{ text: s.name, style: dimStyle }
+			]
+		});
+	});
+
+	// Current step (if any)
+	if (currentStepName && status !== "success") {
+		const progressBar = createProgressBar({
+			progress,
+			width: 30,
+			startChar: "▕",
+			endChar: "▏",
+			fillChar: "█",
+			emptyChar: "░",
+			startStyle: borderStyle,
+			endStyle: borderStyle,
+			fillStyle: { color: ["#3B82F6", "#8B5CF6"] },
+			emptyStyle: dimStyle,
+			percentageStyle: { color: "#60A5FA" }
+		});
+
+		const statusIcon = status === "running" ? "⏳" : "✖";
+		const statusColor = status === "running" ? stepStyle : errorStyle;
+
+		lines.push({
+			segments: [
+				{ text: `${statusIcon} `, style: statusColor },
+				{ text: currentStepName.padEnd(25), style: { modifiers: ["bold"] } },
+				...progressBar.segments
+			]
+		});
+	} else if (currentStepName && status === "success") {
+		// Just marked as success, waiting for next loop to move it to completed
+		// But in our loop logic, we call updateDisplay("step", 1, "success") after finishing.
+		// So we should display it as completed here or just let the "completedSteps" logic handle it?
+		// Actually, if we pass "success", we usually want to show it as done.
+		// However, our loop logic is: update(running) -> await -> update(success) -> next loop.
+
+		// To keep it simple, if status is success, we treat it as completed in the UI.
+		// The `completedSteps` filter above excludes the current one. So we add it here manually if needed.
+
+		lines.push({
+			segments: [
+				{ text: "✔ ", style: successStyle },
+				{ text: currentStepName, style: dimStyle }
+			]
+		});
+	}
+
+	return lines;
+}
+
+function updateDisplay(currentStepName: string, progress: number, status: "running" | "success" | "error") {
+	const leftCol = getLeftColumn(currentStepName, progress, status);
+
+	// Merge left column with dragon
+	// We might need to pad the left column if it's shorter than the dragon to keep the dragon stable
+	const merged = mergeMultipleColumns([leftCol, dragonLines], "    ", undefined);
+
 	printer.print({
-		lines: [
-			titleLine,
-			separator,
-			{ segments: [] },
-			...completedLines,
-			statusLine
-		]
+		lines: merged
 	});
 }
 
