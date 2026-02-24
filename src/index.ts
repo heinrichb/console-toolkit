@@ -6,17 +6,7 @@
 // Style Types
 // -----------------
 
-export type StandardColor =
-	| "black"
-	| "red"
-	| "green"
-	| "yellow"
-	| "blue"
-	| "magenta"
-	| "cyan"
-	| "white"
-	| "gray"
-	| "grey"; // Support both spellings
+export type StandardColor = "black" | "red" | "green" | "yellow" | "blue" | "magenta" | "cyan" | "white" | "gray" | "grey"; // Support both spellings
 
 export type StyleModifier =
 	| "bold"
