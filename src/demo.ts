@@ -51,7 +51,6 @@ export async function runDemo() {
 			width: 30,
 			startChar: "[",
 			endChar: "]",
-			// User requested the first bracket be colored with progressColor
 			startStyle: progressColor,
 			endStyle: progressColor,
 			fillStyle: progressColor,
