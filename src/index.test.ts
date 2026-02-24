@@ -161,8 +161,16 @@ describe("Printer & Layout", () => {
 	});
 
 	test("printDualColumn executes correctly", () => {
-		printDualColumn([lineA], [lineB]);
-		expect(stdoutSpy).toHaveBeenCalled();
+		const printer = new Printer();
+		const printSpy = spyOn(printer, "print").mockImplementation(() => undefined);
+
+		printDualColumn([lineA], [lineB], { printer });
+
+		expect(printSpy).toHaveBeenCalled();
+
+		const calledLines = printSpy.mock.calls[0][0];
+		expect(calledLines.length).toBe(1);
+		expect(getLineLength(calledLines[0])).toBe(17); // 5 (Hello) + 5 (sep) + 7 (World!!)
 	});
 
 	test("getDragonLines returns valid array", () => {
