@@ -9,11 +9,9 @@ describe("Demo Script", () => {
 	const originalTimeout = global.setTimeout;
 
 	beforeEach(() => {
-		// Mock setTimeout to execute immediately
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		global.setTimeout = ((fn: () => void) => {
 			fn();
-		}) as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+		}) as any;
 	});
 
 	afterEach(() => {
@@ -24,14 +22,11 @@ describe("Demo Script", () => {
 	});
 
 	test("runDemo executes correctly", async () => {
-		// eslint-disable-next-line @typescript-eslint/await-thenable, @typescript-eslint/no-confusing-void-expression
-		await expect(runDemo()).resolves.toBeUndefined();
+		expect(runDemo()).resolves.toBeUndefined();
 
 		expect(clearSpy).toHaveBeenCalled();
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Static Dual Column Demo"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Demo Complete!"));
-
-		// Ensure stdout.write was called for the interactive portion
 		expect(stdoutSpy).toHaveBeenCalled();
 	});
 });

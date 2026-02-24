@@ -10,11 +10,13 @@ import {
 	Printer,
 	printDualColumn,
 	getDragonLines,
-	mergeColumns
+	mergeColumns,
+	resolveStyle,
+	StyledLine
 } from "./index";
 
-const lineA = { segments: [{ text: "Hello", style: "" }] };
-const lineB = { segments: [{ text: "World!!", style: "" }] };
+const lineA: StyledLine = { segments: [{ text: "Hello", style: [] }] };
+const lineB: StyledLine = { segments: [{ text: "World!!", style: [] }] };
 
 describe("Color Utilities", () => {
 	test("hexToRgb converts correctly", () => {
@@ -38,15 +40,42 @@ describe("Color Utilities", () => {
 		expect(hexToAnsi("#FF0000")).toBe("\x1b[38;2;255;0;0m");
 	});
 
-	test("interpolateColor finds the midpoint", () => {
+	test("interpolateColor returns hex string", () => {
 		const start = "#000000";
 		const end = "#ffffff";
-		expect(interpolateColor(start, end, 0.5)).toBe("\x1b[38;2;128;128;128m");
+
+		expect(interpolateColor(start, end, 0.5)).toBe("#808080");
 	});
 
 	test("interpolateColor clamps factors", () => {
-		expect(interpolateColor("#000000", "#ffffff", -1)).toBe("\x1b[38;2;0;0;0m");
-		expect(interpolateColor("#000000", "#ffffff", 2)).toBe("\x1b[38;2;255;255;255m");
+		expect(interpolateColor("#000000", "#ffffff", -1)).toBe("#000000");
+		expect(interpolateColor("#000000", "#ffffff", 2)).toBe("#ffffff");
+	});
+});
+
+describe("Style Resolution", () => {
+	test("resolveStyle handles standard colors", () => {
+		expect(resolveStyle("red")).toBe("\x1b[31m");
+		expect(resolveStyle("blue")).toBe("\x1b[34m");
+	});
+
+	test("resolveStyle handles modifiers", () => {
+		expect(resolveStyle("bold")).toBe("\x1b[1m");
+		expect(resolveStyle("reset")).toBe("\x1b[0m");
+	});
+
+	test("resolveStyle handles hex colors", () => {
+		expect(resolveStyle("#FF0000")).toBe("\x1b[38;2;255;0;0m");
+	});
+
+	test("resolveStyle handles arrays of styles", () => {
+		expect(resolveStyle(["bold", "red"])).toBe("\x1b[1m\x1b[31m");
+	});
+
+	test("resolveStyle passes through raw strings", () => {
+		const raw = "\x1b[31m";
+		expect(resolveStyle(raw)).toBe(raw);
+		expect(resolveStyle("unknown")).toBe("unknown");
 	});
 });
 
@@ -62,19 +91,23 @@ describe("Line Utilities", () => {
 	});
 
 	test("padLine adds padding when needed", () => {
-		const padded = padLine(lineA, 10, "style");
+		const padded = padLine(lineA, 10, "red");
+
 		expect(getLineLength(padded)).toBe(10);
+		expect(padded.segments[1].style).toBe("red");
 		expect(padded.segments[1].text).toBe("     ");
 	});
 
 	test("padLine does nothing if line is already wide enough", () => {
-		const ignored = padLine(lineB, 5, "style");
+		const ignored = padLine(lineB, 5, "red");
+
 		expect(getLineLength(ignored)).toBe(7);
 		expect(ignored.segments.length).toBe(1);
 	});
 
 	test("mergeColumns handles asymmetric column lengths", () => {
 		const merged = mergeColumns([lineA], [lineB, lineB], 10, " | ", "");
+
 		expect(merged.length).toBe(2);
 		expect(getLineLength(merged[1])).toBe(10 + 3 + 7);
 	});
@@ -82,30 +115,32 @@ describe("Line Utilities", () => {
 
 describe("Printer & Layout", () => {
 	const stdoutSpy = spyOn(process.stdout, "write").mockImplementation(() => true);
-	const logSpy = spyOn(console, "log").mockImplementation(() => undefined);
 
 	afterEach(() => {
 		stdoutSpy.mockClear();
-		logSpy.mockClear();
 	});
 
-	test("Printer.print outputs to console", () => {
+	test("Printer.print outputs to console with resolved styles", () => {
 		const printer = new Printer();
-		printer.print([{ segments: [{ text: "Test", style: "color: red" }] }]);
+		printer.print([{ segments: [{ text: "Test", style: "red" }] }]);
+
 		expect(stdoutSpy).toHaveBeenCalled();
+
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("\x1b[31mTest");
 	});
 
 	test("Printer handles interactive clearing", () => {
 		const printer = new Printer({ interactive: true });
 		printer.print([{ segments: [{ text: "L1", style: "" }] }]);
 		printer.print([{ segments: [{ text: "L2", style: "" }] }]);
-		// Verify it clears the previous line
+
 		expect(stdoutSpy).toHaveBeenCalledWith(expect.stringContaining("\x1b[1A\x1b[2K\r"));
 	});
 
 	test("Printer optimizes clearing of multiple lines", () => {
 		const printer = new Printer({ interactive: true });
-		// First print: 3 lines
+
 		printer.print([
 			{ segments: [{ text: "L1", style: "" }] },
 			{ segments: [{ text: "L2", style: "" }] },
@@ -114,16 +149,13 @@ describe("Printer & Layout", () => {
 
 		stdoutSpy.mockClear();
 
-		// Second print: should clear 3 lines
 		printer.print([{ segments: [{ text: "New", style: "" }] }]);
 
-		// Verify that we clear 3 lines in a single write call (optimization)
-		// expected sequence: UP + CLEAR_LINE + CR repeated 3 times
 		const clearSeq = "\x1b[1A\x1b[2K\r";
 		const expectedClear = clearSeq.repeat(3);
 
-		// The call should contain the clearing sequence at the start
 		expect(stdoutSpy).toHaveBeenCalledTimes(1);
+
 		const callArg = stdoutSpy.mock.calls[0][0] as string;
 		expect(callArg.startsWith(expectedClear)).toBe(true);
 	});
@@ -136,6 +168,8 @@ describe("Printer & Layout", () => {
 	test("getDragonLines returns valid array", () => {
 		const lines = getDragonLines();
 		expect(lines.length).toBeGreaterThan(0);
-		expect(getDragonLines("#FF0000", "#00FF00").length).toBe(lines.length);
+
+		const firstSegmentStyle = lines[0].segments[0].style as string;
+		expect(firstSegmentStyle.startsWith("#")).toBe(true);
 	});
 });

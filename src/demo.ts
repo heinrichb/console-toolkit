@@ -1,4 +1,4 @@
-import { printDualColumn, getDragonLines, Printer, interpolateColor, StyledLine, RESET, hexToAnsi } from "./index";
+import { printDualColumn, getDragonLines, Printer, interpolateColor, StyledLine, createProgressBar } from "./index";
 import pkg from "../package.json";
 
 /**
@@ -11,10 +11,10 @@ export async function runDemo() {
 
 	// 1. Test Static Dual Column Print
 	console.log("--- Static Dual Column Demo ---");
-	const purple = hexToAnsi("#A78BFA");
-	const blue = hexToAnsi("#60A5FA");
-	const green = hexToAnsi("#34D399");
-	const yellow = hexToAnsi("#FBBF24");
+	const purple = "#A78BFA";
+	const blue = "#60A5FA";
+	const green = "#34D399";
+	const yellow = "#FBBF24";
 
 	const leftContent: StyledLine[] = [
 		{ segments: [{ text: "Package:", style: purple }] },
@@ -38,31 +38,63 @@ export async function runDemo() {
 	printer.print(dragon);
 	console.log("\n");
 
-	// 3. Test Interactive Re-rendering
-	console.log("--- Interactive Re-rendering Demo ---");
+	// 3. Test Progress Bar
+	console.log("--- Interactive Progress Bar Demo ---");
 	const interactivePrinter = new Printer({ interactive: true });
-	const gray = hexToAnsi("#4B5563");
+	const gray = "#4B5563";
 
-	for (let i = 0; i <= 100; i += 5) {
+	for (let i = 0; i <= 100; i += 2) {
 		const progressColor = interpolateColor("#3B82F6", "#10B981", i / 100);
-		const barWidth = 20;
-		const filled = Math.round((i / 100) * barWidth);
 
-		const progressLine: StyledLine[] = [
-			{
-				segments: [
-					{ text: "Download Progress: ", style: RESET },
-					{ text: "[", style: gray },
-					{ text: "█".repeat(filled), style: progressColor },
-					{ text: "░".repeat(barWidth - filled), style: gray },
-					{ text: `] ${i}%`, style: progressColor }
-				]
-			}
-		];
+		const progressLine = createProgressBar({
+			progress: i / 100,
+			width: 30,
+			startChar: "[",
+			endChar: "]",
+			startStyle: progressColor,
+			endStyle: progressColor,
+			fillStyle: progressColor,
+			emptyStyle: gray,
+			percentageStyle: progressColor
+		});
 
-		interactivePrinter.print(progressLine);
-		await new Promise((resolve) => setTimeout(resolve, 50));
+		interactivePrinter.print([progressLine]);
+		await new Promise((resolve) => setTimeout(resolve, 20));
 	}
+	console.log("\n");
+
+	// 4. Style Codes Demo
+	console.log("--- Style Codes Demo ---");
+
+	const styles = [
+		{ name: "Default", style: "default" },
+		{ name: "Bold", style: "bold" },
+		{ name: "Dim", style: "dim" },
+		{ name: "Italic", style: "italic" },
+		{ name: "Underline", style: "underline" },
+		{ name: "Strikethrough", style: "strikethrough" },
+		{ name: "Inverse", style: "inverse" },
+		{ name: "Hidden", style: "hidden" },
+		{ name: "Black", style: "black" },
+		{ name: "Red", style: "red" },
+		{ name: "Green", style: "green" },
+		{ name: "Yellow", style: "yellow" },
+		{ name: "Blue", style: "blue" },
+		{ name: "Magenta", style: "magenta" },
+		{ name: "Cyan", style: "cyan" },
+		{ name: "White", style: "white" },
+		{ name: "Gray", style: "gray" }
+	];
+
+	const styleLines: StyledLine[] = styles.map((s) => ({
+		segments: [
+			{ text: s.name.padEnd(15), style: "default" },
+			{ text: "Sample Text", style: s.style }
+		]
+	}));
+
+	const stylePrinter = new Printer();
+	stylePrinter.print(styleLines);
 
 	console.log("\n✨ Demo Complete!");
 }

@@ -1,3 +1,6 @@
 import { runDemo } from "../src/demo";
 
-runDemo().catch(console.error);
+// Check if this module is being run directly
+if (import.meta.main) {
+	void runDemo();
+}
