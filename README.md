@@ -38,14 +38,14 @@ import { Printer } from "@heinrichb/console-toolkit";
 const printer = new Printer();
 
 printer.print({
-  lines: [
-    {
-      segments: [
-        { text: "Hello, ", style: { color: "blue", modifiers: ["bold"] } },
-        { text: "World!", style: { color: "#10B981", modifiers: ["italic"] } } // Hex color support!
-      ]
-    }
-  ]
+	lines: [
+		{
+			segments: [
+				{ text: "Hello, ", style: { color: "blue", modifiers: ["bold"] } },
+				{ text: "World!", style: { color: "#10B981", modifiers: ["italic"] } } // Hex color support!
+			]
+		}
+	]
 });
 ```
 
@@ -61,8 +61,8 @@ We support a flexible styling system that works with both standard terminal colo
 import { PrintStyle } from "@heinrichb/console-toolkit";
 
 const myStyle: PrintStyle = {
-  color: "red",            // Standard color
-  modifiers: ["bold", "underline"]
+	color: "red", // Standard color
+	modifiers: ["bold", "underline"]
 };
 ```
 
@@ -72,8 +72,8 @@ You can use any hex color string. For gradients, simply provide an array of colo
 
 ```typescript
 const gradientStyle: PrintStyle = {
-  // Creates a gradient from Red to Blue
-  color: ["#EF4444", "#3B82F6"]
+	// Creates a gradient from Red to Blue
+	color: ["#EF4444", "#3B82F6"]
 };
 ```
 
@@ -86,16 +86,21 @@ Creating multi-column layouts is a breeze.
 ```typescript
 import { printColumns } from "@heinrichb/console-toolkit";
 
-printColumns([
-  [ // Column 1
-    { segments: [{ text: "Item 1" }] },
-    { segments: [{ text: "Item 2" }] }
-  ],
-  [ // Column 2
-    { segments: [{ text: "Description 1", style: { color: "gray" } }] },
-    { segments: [{ text: "Description 2", style: { color: "gray" } }] }
-  ]
-], { separator: " | " });
+printColumns(
+	[
+		[
+			// Column 1
+			{ segments: [{ text: "Item 1" }] },
+			{ segments: [{ text: "Item 2" }] }
+		],
+		[
+			// Column 2
+			{ segments: [{ text: "Description 1", style: { color: "gray" } }] },
+			{ segments: [{ text: "Description 2", style: { color: "gray" } }] }
+		]
+	],
+	{ separator: " | " }
+);
 ```
 
 ---
@@ -111,10 +116,10 @@ import { createProgressBar, Printer } from "@heinrichb/console-toolkit";
 
 const printer = new Printer({ live: true });
 const bar = createProgressBar({
-  progress: 0.75,
-  width: 30,
-  fillStyle: { color: "green" },
-  emptyStyle: { color: "gray" }
+	progress: 0.75,
+	width: 30,
+	fillStyle: { color: "green" },
+	emptyStyle: { color: "gray" }
 });
 
 printer.print({ lines: [bar] });
@@ -132,9 +137,11 @@ const printer = new Printer({ live: true });
 
 // In your loop:
 printer.print({
-  lines: [{
-    segments: [{ text: spinner.getFrame(), style: { color: "cyan" } }]
-  }]
+	lines: [
+		{
+			segments: [{ text: spinner.getFrame(), style: { color: "cyan" } }]
+		}
+	]
 });
 ```
 
@@ -152,4 +159,4 @@ For more in-depth information on specific parts of the library, check out the de
 
 ## 📄 License
 
-MIT © Heinrich B
+MIT © Brennen Heinrich
