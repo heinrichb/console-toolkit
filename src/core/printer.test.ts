@@ -133,4 +133,22 @@ describe("Printer", () => {
 		const secondCallOutput = stdoutSpy.mock.calls[1][0] as string;
 		expect(secondCallOutput.startsWith(expectedClear)).toBe(true);
 	});
+
+	test("Printer.clear() manually clears the output", () => {
+		const printer = new Printer({ live: true });
+		printer.print({
+			lines: [{ segments: [{ text: "Line 1" }] }]
+		});
+
+		expect(stdoutSpy).toHaveBeenCalledTimes(1);
+
+		printer.clear();
+
+		expect(stdoutSpy).toHaveBeenCalledTimes(2);
+		const clearSeq = `${ESC}[1A${ESC}[2K\r`;
+		const expectedClear = clearSeq.repeat(1);
+		const clearOutput = stdoutSpy.mock.calls[1][0] as string;
+
+		expect(clearOutput).toBe(expectedClear);
+	});
 });
