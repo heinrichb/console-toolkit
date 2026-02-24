@@ -1,11 +1,5 @@
 import { expect, test, describe } from "bun:test";
-import {
-	hexToRgb,
-	rgbToAnsi,
-	hexToAnsi,
-	interpolateColor,
-	resolveStyle
-} from "./style";
+import { hexToRgb, rgbToAnsi, hexToAnsi, interpolateColor, resolveStyle } from "./style";
 
 describe("Color Utilities", () => {
 	test("hexToRgb converts correctly", () => {
@@ -68,5 +62,11 @@ describe("Style Resolution", () => {
 		const raw = "\x1b[31m";
 		expect(resolveStyle(raw)).toBe(raw);
 		expect(resolveStyle("unknown")).toBe("unknown");
+	});
+
+	test("resolveStyle gracefully handles invalid hex strings", () => {
+		// This should trigger the try/catch block in resolveStyle
+		expect(resolveStyle("#ZZZ")).toBe("");
+		expect(resolveStyle("#1234567")).toBe("");
 	});
 });
