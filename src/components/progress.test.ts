@@ -1,6 +1,6 @@
 import { expect, test, describe } from "bun:test";
 import { createProgressBar } from "./progress";
-import { StyledLine } from "./index";
+import { StyledLine } from "../core/types";
 
 function getText(line: StyledLine): string {
 	return line.segments.map((s) => s.text).join("");

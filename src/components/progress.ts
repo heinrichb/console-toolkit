@@ -1,4 +1,4 @@
-import { StyledLine, StyledSegment, Style } from "./index";
+import { StyledLine, StyledSegment, Style } from "../core/types";
 
 export interface ProgressBarOptions {
 	/**
