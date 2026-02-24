@@ -1,4 +1,4 @@
-import { printDualColumn, getDragonLines, Printer, interpolateColor, StyledLine, RESET, hexToRgb, rgbToAnsi } from "./index";
+import { printDualColumn, getDragonLines, Printer, interpolateColor, StyledLine, RESET, hexToAnsi } from "./index";
 import pkg from "../package.json";
 
 /**
@@ -6,22 +6,15 @@ import pkg from "../package.json";
  * bun run src/demo.ts
  */
 
-const BOLD = "\x1b[1m";
-
-function hex(color: string): string {
-	const { r, g, b } = hexToRgb(color);
-	return rgbToAnsi(r, g, b);
-}
-
 export async function runDemo() {
 	console.clear();
 
 	// 1. Test Static Dual Column Print
 	console.log("--- Static Dual Column Demo ---");
-	const purple = hex("#A78BFA") + BOLD;
-	const blue = hex("#60A5FA");
-	const green = hex("#34D399");
-	const yellow = hex("#FBBF24");
+	const purple = hexToAnsi("#A78BFA");
+	const blue = hexToAnsi("#60A5FA");
+	const green = hexToAnsi("#34D399");
+	const yellow = hexToAnsi("#FBBF24");
 
 	const leftContent: StyledLine[] = [
 		{ segments: [{ text: "Package:", style: purple }] },
@@ -48,7 +41,7 @@ export async function runDemo() {
 	// 3. Test Interactive Re-rendering
 	console.log("--- Interactive Re-rendering Demo ---");
 	const interactivePrinter = new Printer({ interactive: true });
-	const gray = hex("#4B5563");
+	const gray = hexToAnsi("#4B5563");
 
 	for (let i = 0; i <= 100; i += 5) {
 		const progressColor = interpolateColor("#3B82F6", "#10B981", i / 100);
@@ -62,7 +55,7 @@ export async function runDemo() {
 					{ text: "[", style: gray },
 					{ text: "█".repeat(filled), style: progressColor },
 					{ text: "░".repeat(barWidth - filled), style: gray },
-					{ text: `] ${i}%`, style: progressColor + BOLD }
+					{ text: `] ${i}%`, style: progressColor }
 				]
 			}
 		];
