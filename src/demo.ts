@@ -113,7 +113,7 @@ export async function runDemo() {
 		livePrinter.print(
 			block([
 				progressLine,
-				line([]),
+				line(),
 				line([segment("Horizontal Gradient on Bar Segment:", { modifiers: ["bold"] })]),
 				complexGradientBar
 			])

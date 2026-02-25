@@ -32,6 +32,12 @@ describe("Builders", () => {
 		expect(result).toEqual(expected);
 	});
 
+	test("line creates an empty PrintLine when no args provided", () => {
+		const result = line();
+		const expected: PrintLine = { segments: [] };
+		expect(result).toEqual(expected);
+	});
+
 	test("block creates a PrintBlock with lines only", () => {
 		const l1 = line([segment("Line 1")]);
 		const result = block([l1]);
@@ -44,6 +50,12 @@ describe("Builders", () => {
 		const style: PrintStyle = { color: "green" };
 		const result = block([l1], style);
 		const expected: PrintBlock = { lines: [l1], style };
+		expect(result).toEqual(expected);
+	});
+
+	test("block creates an empty PrintBlock when no args provided", () => {
+		const result = block();
+		const expected: PrintBlock = { lines: [] };
 		expect(result).toEqual(expected);
 	});
 });

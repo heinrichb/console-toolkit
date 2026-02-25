@@ -14,21 +14,21 @@ export function segment(text: string, style?: PrintStyle): PrintSegment {
 /**
  * Creates a PrintLine object.
  *
- * @param segments - An array of PrintSegments that make up the line.
- * @param style - The optional style to apply to the entire line (overrides block style, overridden by segment style).
+ * @param segments - An optional array of PrintSegments that make up the line. Defaults to [].
+ * @param style - The optional style to apply to the entire line.
  * @returns A PrintLine object.
  */
-export function line(segments: PrintSegment[], style?: PrintStyle): PrintLine {
+export function line(segments: PrintSegment[] = [], style?: PrintStyle): PrintLine {
 	return { segments, style };
 }
 
 /**
  * Creates a PrintBlock object.
  *
- * @param lines - An array of PrintLines that make up the block.
- * @param style - The optional style to apply to the entire block (base style).
+ * @param lines - An optional array of PrintLines that make up the block. Defaults to [].
+ * @param style - The optional style to apply to the entire block.
  * @returns A PrintBlock object.
  */
-export function block(lines: PrintLine[], style?: PrintStyle): PrintBlock {
+export function block(lines: PrintLine[] = [], style?: PrintStyle): PrintBlock {
 	return { lines, style };
 }

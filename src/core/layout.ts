@@ -36,7 +36,7 @@ export function mergeColumns(
 	for (let i = 0; i < maxLines; i++) {
 		let segments: PrintSegment[] = [];
 		for (let j = 0; j < columns.length; j++) {
-			const currentLine = columns[j][i] || line([]);
+			const currentLine = columns[j][i] || line();
 
 			// If not the last column, pad it
 			if (j < columns.length - 1) {
