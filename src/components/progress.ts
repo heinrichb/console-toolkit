@@ -109,12 +109,14 @@ export function createProgressBar(options: ProgressBarOptions): PrintLine {
 		formatPercentage
 	} = options;
 
-	// Clamp progress
+	// Clamp width and progress
+	// Max width is capped at 10,000 to prevent uncontrolled resource consumption (CWE-400)
+	const barWidth = Number.isFinite(width) ? Math.max(0, Math.min(10000, width)) : 0;
 	const p = Math.max(0, Math.min(1, progress));
 
 	// Calculate filled width
-	const filledWidth = Math.round(p * width);
-	const emptyWidth = width - filledWidth;
+	const filledWidth = Math.round(p * barWidth);
+	const emptyWidth = Math.max(0, barWidth - filledWidth);
 
 	// Resolve styles (Defaults)
 	const resolvedBracketStyle = bracketStyle ?? style;

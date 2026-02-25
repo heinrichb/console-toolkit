@@ -122,4 +122,26 @@ describe("createProgressBar", () => {
 		const lineHigh = createProgressBar({ progress: 1.1 });
 		expect(getText(lineHigh)).toContain("100%");
 	});
+
+	test("clamping and validating width", () => {
+		// Negative width should not throw and should be treated as 0
+		expect(() => createProgressBar({ progress: 0.5, width: -10 })).not.toThrow();
+		const negativeLine = createProgressBar({ progress: 0.5, width: -10 });
+		expect(getText(negativeLine)).toBe("[] 50%");
+
+		// Infinity width should not throw and should be treated as 0 (safe fallback)
+		expect(() => createProgressBar({ progress: 0.5, width: Infinity })).not.toThrow();
+		const infinityLine = createProgressBar({ progress: 0.5, width: Infinity });
+		expect(getText(infinityLine)).toBe("[] 50%");
+
+		// NaN width should not throw and should be treated as 0 (safe fallback)
+		expect(() => createProgressBar({ progress: 0.5, width: NaN })).not.toThrow();
+		const nanLine = createProgressBar({ progress: 0.5, width: NaN });
+		expect(getText(nanLine)).toBe("[] 50%");
+
+		// Very large width should be capped at 10000
+		const largeLine = createProgressBar({ progress: 1.0, width: 20000 });
+		const filled = largeLine.segments.find((s) => s.text.includes("█"));
+		expect(filled?.text.length).toBe(10000);
+	});
 });
