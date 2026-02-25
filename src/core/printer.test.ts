@@ -2,6 +2,7 @@ import { expect, test, describe, spyOn, afterEach } from "bun:test";
 import { Printer } from "./printer";
 import { PrintBlock } from "./types";
 import { resolveColorToAnsi } from "./style";
+import { line, segment, block } from "./builders";
 
 const ESC = "\x1b";
 
@@ -15,10 +16,8 @@ describe("Printer", () => {
 
 	test("Printer.print outputs basic text with solid styles", () => {
 		const printer = new Printer();
-		const block: PrintBlock = {
-			lines: [{ segments: [{ text: "Hello", style: { color: "red" } }] }]
-		};
-		printer.print(block);
+		const testBlock = block([line([segment("Hello", { color: "red" })])]);
+		printer.print(testBlock);
 
 		expect(stdoutSpy).toHaveBeenCalledTimes(1);
 		const output = stdoutSpy.mock.calls[0][0] as string;
@@ -28,11 +27,11 @@ describe("Printer", () => {
 
 	test("Printer.print applies Block style to lines (inheritance)", () => {
 		const printer = new Printer();
-		const block: PrintBlock = {
-			style: { color: "blue", modifiers: ["bold"] },
-			lines: [{ segments: [{ text: "Line 1" }] }, { segments: [{ text: "Line 2" }] }]
-		};
-		printer.print(block);
+		const testBlock = block([line([segment("Line 1")]), line([segment("Line 2")])], {
+			color: "blue",
+			modifiers: ["bold"]
+		});
+		printer.print(testBlock);
 
 		const output = stdoutSpy.mock.calls[0][0] as string;
 		const blueAnsi = resolveColorToAnsi("blue");
@@ -46,15 +45,15 @@ describe("Printer", () => {
 
 	test("Printer handles Block Vertical Gradient (Lines inherit solid colors)", () => {
 		const printer = new Printer();
-		const block: PrintBlock = {
-			style: { color: ["#000000", "#FFFFFF"] }, // Black to White
-			lines: [
-				{ segments: [{ text: "Start" }] }, // Should be Black
-				{ segments: [{ text: "Middle" }] }, // Should be Gray
-				{ segments: [{ text: "End" }] } // Should be White
-			]
-		};
-		printer.print(block);
+		const testBlock = block(
+			[
+				line([segment("Start")]), // Should be Black
+				line([segment("Middle")]), // Should be Gray
+				line([segment("End")]) // Should be White
+			],
+			{ color: ["#000000", "#FFFFFF"] }
+		);
+		printer.print(testBlock);
 
 		const output = stdoutSpy.mock.calls[0][0] as string;
 
@@ -69,15 +68,10 @@ describe("Printer", () => {
 
 	test("Printer handles Line Override (Horizontal Gradient)", () => {
 		const printer = new Printer();
-		const block: PrintBlock = {
-			lines: [
-				{
-					style: { color: ["#FF0000", "#0000FF"] }, // Red to Blue
-					segments: [{ text: "GB" }] // Gradient applies to these 2 chars
-				}
-			]
-		};
-		printer.print(block);
+		const testBlock = block([
+			line([segment("GB")], { color: ["#FF0000", "#0000FF"] }) // Gradient applies to these 2 chars
+		]);
+		printer.print(testBlock);
 
 		const output = stdoutSpy.mock.calls[0][0] as string;
 
@@ -94,18 +88,16 @@ describe("Printer", () => {
 
 	test("Printer handles Segment Override (Solid overrides Line Gradient)", () => {
 		const printer = new Printer();
-		const block: PrintBlock = {
-			lines: [
-				{
-					style: { color: ["#FF0000", "#0000FF"] }, // Line Gradient
-					segments: [
-						{ text: "A" }, // Inherits Gradient (Red)
-						{ text: "B", style: { color: "green" } } // Override Solid (Green)
-					]
-				}
-			]
-		};
-		printer.print(block);
+		const testBlock = block([
+			line(
+				[
+					segment("A"), // Inherits Gradient (Red)
+					segment("B", { color: "green" }) // Override Solid (Green)
+				],
+				{ color: ["#FF0000", "#0000FF"] }
+			)
+		]);
+		printer.print(testBlock);
 		const output = stdoutSpy.mock.calls[0][0] as string;
 
 		const redAnsi = resolveColorToAnsi("#FF0000");
@@ -118,14 +110,10 @@ describe("Printer", () => {
 	test("Printer handles live clearing", () => {
 		const printer = new Printer({ live: true });
 		// Print 2 lines
-		printer.print({
-			lines: [{ segments: [{ text: "1" }] }, { segments: [{ text: "2" }] }]
-		});
+		printer.print(block([line([segment("1")]), line([segment("2")])]));
 
 		// Print again (should clear 2 lines)
-		printer.print({
-			lines: [{ segments: [{ text: "New" }] }]
-		});
+		printer.print(block([line([segment("New")])]));
 
 		const clearSeq = `${ESC}[1A${ESC}[2K\r`;
 		const expectedClear = clearSeq.repeat(2);
@@ -136,9 +124,7 @@ describe("Printer", () => {
 
 	test("Printer.clear() manually clears the output", () => {
 		const printer = new Printer({ live: true });
-		printer.print({
-			lines: [{ segments: [{ text: "Line 1" }] }]
-		});
+		printer.print(block([line([segment("Line 1")])]));
 
 		expect(stdoutSpy).toHaveBeenCalledTimes(1);
 

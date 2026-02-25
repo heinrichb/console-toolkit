@@ -1,4 +1,15 @@
-import { printColumns, getDragon, Printer, interpolateColor, createProgressBar, Spinner, SPINNERS } from "./index";
+import {
+	printColumns,
+	getDragon,
+	Printer,
+	interpolateColor,
+	createProgressBar,
+	Spinner,
+	SPINNERS,
+	line,
+	segment,
+	block
+} from "./index";
 import { PrintLine, PrintStyle, HexColor } from "./core/types";
 import pkg from "../package.json";
 
@@ -28,15 +39,15 @@ export async function runDemo() {
 	const yellow: PrintStyle = { color: "#FBBF24" };
 
 	const leftContent: PrintLine[] = [
-		{ segments: [{ text: "Package:", style: purple }] },
-		{ segments: [{ text: "Version:", style: purple }] },
-		{ segments: [{ text: "Status:", style: purple }] }
+		line([segment("Package:", purple)]),
+		line([segment("Version:", purple)]),
+		line([segment("Status:", purple)])
 	];
 
 	const rightContent: PrintLine[] = [
-		{ segments: [{ text: pkg.name, style: blue }] },
-		{ segments: [{ text: pkg.version, style: green }] },
-		{ segments: [{ text: "Testing live output...", style: yellow }] }
+		line([segment(pkg.name, blue)]),
+		line([segment(pkg.version, green)]),
+		line([segment("Testing live output...", yellow)])
 	];
 
 	printColumns([leftContent, rightContent], { separator: "  =>  ", printer: staticPrinter });
@@ -44,14 +55,11 @@ export async function runDemo() {
 
 	// 2. Block Vertical Gradient Demo
 	console.log("--- Block Vertical Gradient Demo ---");
-	const gradientBlockLines: PrintLine[] = Array.from({ length: 10 }, (_, i) => ({
-		segments: [{ text: `Line ${i + 1} - Inherits Gradient` }]
-	}));
+	const gradientBlockLines: PrintLine[] = Array.from({ length: 10 }, (_, i) =>
+		line([segment(`Line ${i + 1} - Inherits Gradient`)])
+	);
 
-	staticPrinter.print({
-		style: { color: ["#EF4444", "#3B82F6"] },
-		lines: gradientBlockLines
-	});
+	staticPrinter.print(block(gradientBlockLines, { color: ["#EF4444", "#3B82F6"] }));
 	console.log("\n");
 
 	// 3. Dragon Gradient Preset
@@ -102,14 +110,14 @@ export async function runDemo() {
 			percentageStyle: { modifiers: ["bold"], color: gradientHex }
 		});
 
-		livePrinter.print({
-			lines: [
+		livePrinter.print(
+			block([
 				progressLine,
-				{ segments: [] },
-				{ segments: [{ text: "Horizontal Gradient on Bar Segment:", style: { modifiers: ["bold"] } }] },
+				line([]),
+				line([segment("Horizontal Gradient on Bar Segment:", { modifiers: ["bold"] })]),
 				complexGradientBar
-			]
-		});
+			])
+		);
 		await new Promise((resolve) => setTimeout(resolve, 30));
 	}
 	console.log("\n");
@@ -127,14 +135,14 @@ export async function runDemo() {
 	const spinnerStart = Date.now();
 
 	while (Date.now() - spinnerStart < 3000) {
-		const lines: PrintLine[] = spinners.map((s) => ({
-			segments: [
-				{ text: `${s.type.charAt(0).toUpperCase() + s.type.slice(1)}:`.padEnd(10), style: { modifiers: ["dim"] } },
-				{ text: s.instance.getFrame(), style: { color: "cyan" } }
-			]
-		}));
+		const lines: PrintLine[] = spinners.map((s) =>
+			line([
+				segment(`${s.type.charAt(0).toUpperCase() + s.type.slice(1)}:`.padEnd(10), { modifiers: ["dim"] }),
+				segment(s.instance.getFrame(), { color: "cyan" })
+			])
+		);
 
-		spinnerPrinter.print({ lines });
+		spinnerPrinter.print(block(lines));
 		await new Promise((resolve) => setTimeout(resolve, 50));
 	}
 	console.log("\n");
@@ -162,10 +170,8 @@ export async function runDemo() {
 		{ name: "Gray", style: { color: "gray" } }
 	];
 
-	const styleLines: PrintLine[] = styles.map((s) => ({
-		segments: [{ text: s.name.padEnd(20) }, { text: "Sample Text", style: s.style }]
-	}));
+	const styleLines: PrintLine[] = styles.map((s) => line([segment(s.name.padEnd(20)), segment("Sample Text", s.style)]));
 
-	staticPrinter.print({ lines: styleLines });
+	staticPrinter.print(block(styleLines));
 	console.log("\n✨ Demo Complete!");
 }

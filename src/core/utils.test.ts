@@ -1,9 +1,9 @@
 import { expect, test, describe } from "bun:test";
 import { getLineLength, computeMaxWidth, padLine } from "./utils";
-import { PrintLine } from "./types";
+import { line, segment } from "./builders";
 
-const lineA: PrintLine = { segments: [{ text: "Hello", style: {} }] };
-const lineB: PrintLine = { segments: [{ text: "World!!", style: {} }] };
+const lineA = line([segment("Hello")]);
+const lineB = line([segment("World!!")]);
 
 describe("Line Utilities", () => {
 	test("getLineLength calculates correctly", () => {

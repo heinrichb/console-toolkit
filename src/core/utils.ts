@@ -1,4 +1,5 @@
 import { PrintLine, PrintStyle } from "./types";
+import { line as makeLine, segment } from "./builders";
 
 /**
  * Gets the plain text length of a PrintLine (ignoring ANSI codes).
@@ -32,9 +33,7 @@ export function computeMaxWidth(lines: PrintLine[]): number {
 export function padLine(line: PrintLine, targetWidth: number, padStyle?: PrintStyle): PrintLine {
 	const currentLength = getLineLength(line);
 	if (currentLength < targetWidth) {
-		return {
-			segments: [...line.segments, { text: " ".repeat(targetWidth - currentLength), style: padStyle }]
-		};
+		return makeLine([...line.segments, segment(" ".repeat(targetWidth - currentLength), padStyle)], line.style);
 	}
 	return line;
 }
