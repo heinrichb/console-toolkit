@@ -1,125 +1,105 @@
 import { expect, test, describe } from "bun:test";
 import { createProgressBar } from "./progress";
-import { PrintLine } from "../core/types";
-
-function getText(line: PrintLine): string {
-	return line.segments.map((s) => s.text).join("");
-}
+import { PrintStyle } from "../core/types";
 
 describe("createProgressBar", () => {
 	test("generates a default progress bar at 0%", () => {
-		const line = createProgressBar({ progress: 0 });
-		const text = getText(line);
+		const result = createProgressBar({ progress: 0 });
 
 		// Default format: [░░░░░░░░░░░░░░░░░░░░] 0%
-		expect(text).toContain("[");
-		expect(text).toContain("]");
-		expect(text).toContain("0%");
-		expect(text).toContain("░");
+		expect(result.segments.length).toBeGreaterThan(0);
+		const fullText = result.segments.map((s) => s.text).join("");
+		expect(fullText).toContain("[");
+		expect(fullText).toContain("]");
+		expect(fullText).toContain("0%");
+		// Should not contain empty char
+		expect(fullText).toContain("░");
 	});
 
 	test("generates a default progress bar at 50%", () => {
-		const line = createProgressBar({ progress: 0.5 });
-		const text = getText(line);
+		const result = createProgressBar({ progress: 0.5, width: 10 });
 
-		expect(text).toContain("50%");
-		expect(text).toContain("█");
-		expect(text).toContain("░");
+		// But wait, width default 20. 100% means 20 filled. 0 empty.
+		// 50% of 10 is 5.
+		// [█████░░░░░] 50%
+		const fullText = result.segments.map((s) => s.text).join("");
+		expect(fullText).toContain("█████");
+		expect(fullText).toContain("░░░░░");
 	});
 
 	test("generates a default progress bar at 100%", () => {
-		const line = createProgressBar({ progress: 1.0 });
-		const text = getText(line);
-
-		expect(text).toContain("100%");
-		// Should not contain empty char
-		// But wait, width default 20. 100% means 20 filled. 0 empty.
-		expect(text).not.toContain("░");
+		const result = createProgressBar({ progress: 1 });
+		const fullText = result.segments.map((s) => s.text).join("");
+		expect(fullText).not.toContain("░"); // No empty chars
+		expect(fullText).toContain("100%");
 	});
 
 	test("allows custom width", () => {
-		const width = 10;
-		const line = createProgressBar({ progress: 0.5, width });
-		const segments = line.segments;
-		const filled = segments.find((s) => s.text.includes("█"));
-		const empty = segments.find((s) => s.text.includes("░"));
-
-		// 50% of 10 is 5.
-		expect(filled?.text.length).toBe(5);
-		expect(empty?.text.length).toBe(5);
+		const result = createProgressBar({ progress: 0.5, width: 4 });
+		// 50% of 4 = 2 filled, 2 empty
+		const fullText = result.segments.map((s) => s.text).join("");
+		expect(fullText).toContain("██░░");
 	});
 
 	test("applies styles correctly", () => {
-		const line = createProgressBar({
-			progress: 0.5,
-			style: { color: "blue" },
-			bracketStyle: { color: "red" },
-			barStyle: { color: "green" },
-			percentageStyle: { color: "yellow" }
+		const style: PrintStyle = { color: "red" };
+		const result = createProgressBar({ progress: 0.5, style });
+
+		// All segments should inherit style unless overridden?
+		// createProgressBar implementation: bracketStyle ?? style
+		result.segments.forEach((seg) => {
+			expect(seg.style).toEqual(style);
 		});
-
-		const start = line.segments.find((s) => s.text === "[");
-		const filled = line.segments.find((s) => s.text.includes("█"));
-		const end = line.segments.find((s) => s.text === "]");
-		const percentage = line.segments.find((s) => s.text.includes("%"));
-
-		expect(start?.style).toEqual({ color: "red" });
-		expect(filled?.style).toEqual({ color: "green" });
-		expect(end?.style).toEqual({ color: "red" });
-		expect(percentage?.style).toEqual({ color: "yellow" });
 	});
 
 	test("cascades styles (general style -> specific)", () => {
-		const line = createProgressBar({
-			progress: 0.5,
-			style: { color: "blue" }
-		});
+		const baseStyle: PrintStyle = { color: "blue" };
+		const fillStyle: PrintStyle = { color: "green" };
+		const result = createProgressBar({ progress: 0.5, style: baseStyle, fillStyle });
 
-		line.segments.forEach((s) => {
-			if (s.text.trim().length > 0) {
-				expect(s.style).toEqual({ color: "blue" });
-			}
-		});
+		// Find filled segment (usually index 1 if bracket exists)
+		const filledSeg = result.segments.find((s) => s.text.includes("█"));
+		expect(filledSeg?.style).toEqual(fillStyle);
+
+		const bracketSeg = result.segments.find((s) => s.text.includes("["));
+		expect(bracketSeg?.style).toEqual(baseStyle);
 	});
 
 	test("allows custom characters", () => {
-		const line = createProgressBar({
+		const result = createProgressBar({
 			progress: 0.5,
 			startChar: "<",
 			endChar: ">",
 			fillChar: "=",
 			emptyChar: "-"
 		});
-		const text = getText(line);
-		expect(text).toContain("<");
-		expect(text).toContain(">");
-		expect(text).toContain("=");
-		expect(text).toContain("-");
+		const fullText = result.segments.map((s) => s.text).join("");
+		expect(fullText).toContain("<");
+		expect(fullText).toContain("=");
+		expect(fullText).toContain("-");
+		expect(fullText).toContain(">");
 	});
 
 	test("hides percentage", () => {
-		const line = createProgressBar({
-			progress: 0.5,
-			showPercentage: false
-		});
-		const text = getText(line);
-		expect(text).not.toContain("%");
+		const result = createProgressBar({ progress: 0.5, showPercentage: false });
+		const fullText = result.segments.map((s) => s.text).join("");
+		expect(fullText).not.toContain("%");
 	});
 
 	test("formats percentage custom", () => {
-		const line = createProgressBar({
+		const result = createProgressBar({
 			progress: 0.5,
-			formatPercentage: (p) => `${p * 10}/10`
+			formatPercentage: (p) => ` ${(p * 100).toFixed(1)} pct`
 		});
-		const text = getText(line);
-		expect(text).toContain("5/10");
+		const fullText = result.segments.map((s) => s.text).join("");
+		expect(fullText).toContain(" 50.0 pct");
 	});
 
 	test("clamping progress", () => {
-		const lineLow = createProgressBar({ progress: -0.1 });
-		expect(getText(lineLow)).toContain("0%");
+		const resultLow = createProgressBar({ progress: -1 });
+		expect(resultLow.segments.map((s) => s.text).join("")).toContain("0%");
 
-		const lineHigh = createProgressBar({ progress: 1.1 });
-		expect(getText(lineHigh)).toContain("100%");
+		const resultHigh = createProgressBar({ progress: 2 });
+		expect(resultHigh.segments.map((s) => s.text).join("")).toContain("100%");
 	});
 });

@@ -1,5 +1,5 @@
 import { PrintLine, PrintStyle } from "./types";
-import { line as makeLine, segment } from "./builders";
+import { line as createLine, segment } from "./builders";
 
 /**
  * Gets the plain text length of a PrintLine (ignoring ANSI codes).
@@ -25,15 +25,15 @@ export function computeMaxWidth(lines: PrintLine[]): number {
 /**
  * Pads a PrintLine to a target width by adding an empty segment at the end.
  *
- * @param line - The line to pad.
+ * @param inputLine - The line to pad.
  * @param targetWidth - The desired minimum width.
  * @param padStyle - The style to apply to the padding spaces.
  * @returns A new PrintLine with padding added if necessary.
  */
-export function padLine(line: PrintLine, targetWidth: number, padStyle?: PrintStyle): PrintLine {
-	const currentLength = getLineLength(line);
+export function padLine(inputLine: PrintLine, targetWidth: number, padStyle?: PrintStyle): PrintLine {
+	const currentLength = getLineLength(inputLine);
 	if (currentLength < targetWidth) {
-		return makeLine([...line.segments, segment(" ".repeat(targetWidth - currentLength), padStyle)], line.style);
+		return createLine([...inputLine.segments, segment(" ".repeat(targetWidth - currentLength), padStyle)], inputLine.style);
 	}
-	return line;
+	return inputLine;
 }

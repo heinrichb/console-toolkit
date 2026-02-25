@@ -1,7 +1,7 @@
 import { PrintLine, PrintSegment, PrintStyle } from "./types";
 import { computeMaxWidth, padLine } from "./utils";
 import { Printer } from "./printer";
-import { line as makeLine, segment, block } from "./builders";
+import { line, segment, block } from "./builders";
 
 // -----------------
 // Core Layout & Printing
@@ -36,7 +36,7 @@ export function mergeColumns(
 	for (let i = 0; i < maxLines; i++) {
 		let segments: PrintSegment[] = [];
 		for (let j = 0; j < columns.length; j++) {
-			const currentLine = columns[j][i] || makeLine([]);
+			const currentLine = columns[j][i] || line([]);
 
 			// If not the last column, pad it
 			if (j < columns.length - 1) {
@@ -47,7 +47,7 @@ export function mergeColumns(
 				segments = [...segments, ...currentLine.segments];
 			}
 		}
-		output.push(makeLine(segments));
+		output.push(line(segments));
 	}
 	return output;
 }

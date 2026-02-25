@@ -7,7 +7,6 @@ import { line, segment, block } from "./builders";
 const ESC = "\x1b";
 
 describe("Printer", () => {
-	// Mock process.stdout.write to prevent actual output during tests
 	const stdoutSpy = spyOn(process.stdout, "write").mockImplementation(() => true);
 
 	afterEach(() => {
@@ -37,7 +36,6 @@ describe("Printer", () => {
 		const blueAnsi = resolveColorToAnsi("blue");
 		const boldAnsi = `${ESC}[1m`;
 
-		// Both lines should be Blue + Bold
 		// Matches: Bold + Blue + Text + Reset
 		expect(output).toContain(`${boldAnsi}${blueAnsi}Line 1${ESC}[0m`);
 		expect(output).toContain(`${boldAnsi}${blueAnsi}Line 2${ESC}[0m`);
@@ -74,10 +72,6 @@ describe("Printer", () => {
 		printer.print(testBlock);
 
 		const output = stdoutSpy.mock.calls[0][0] as string;
-
-		// First char 'G' should be Red (start)
-		// Second char 'B' should be Blue (end) - wait, factor logic?
-		// Length 2. index 0 -> factor 0. index 1 -> factor 1.
 
 		const redAnsi = resolveColorToAnsi("#FF0000");
 		const blueAnsi = resolveColorToAnsi("#0000FF");

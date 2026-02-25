@@ -18,7 +18,6 @@ describe("Layout Utilities", () => {
 		// Column 1: [lineA]
 		// Column 2: [lineB, lineB]
 		// Separator: " | "
-		// Default Style: undefined
 		// Widths: [10] (first col width 10)
 		const merged = mergeColumns([[lineA], [lineB, lineB]], " | ", undefined, [10]);
 
@@ -51,9 +50,6 @@ describe("Layout Utilities", () => {
 
 	test("printColumns handles empty columns", () => {
 		printColumns([]);
-		// Should just print nothing or minimal output (if logic handles empty array gracefully)
-		// mergeColumns returns []
-		// printer.print({ lines: [] }) -> might output clear sequence or empty string
 		expect(stdoutSpy).toHaveBeenCalled();
 	});
 

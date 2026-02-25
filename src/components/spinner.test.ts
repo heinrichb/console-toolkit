@@ -1,19 +1,14 @@
-import { expect, test, describe, spyOn, afterEach, beforeEach } from "bun:test";
+import { expect, test, describe, spyOn, afterEach } from "bun:test";
 import { Spinner, SPINNERS } from "./spinner";
 
 describe("Spinner Class", () => {
-	let now = 1000;
 	// Mock Date.now() to control time
-	const dateSpy = spyOn(Date, "now").mockImplementation(() => now);
-
-	beforeEach(() => {
-		now = 1000;
-		dateSpy.mockClear();
-		dateSpy.mockImplementation(() => now);
-	});
+	let currentTime = 1000;
+	const dateSpy = spyOn(Date, "now").mockImplementation(() => currentTime);
 
 	afterEach(() => {
 		dateSpy.mockClear();
+		currentTime = 1000;
 	});
 
 	test("initializes with correct defaults", () => {
@@ -28,19 +23,19 @@ describe("Spinner Class", () => {
 		expect(spinner.getFrame()).toBe("a");
 
 		// t=50 (1050) -> still frame 0
-		now = 1050;
+		currentTime = 1050;
 		expect(spinner.getFrame()).toBe("a");
 
 		// t=100 (1100) -> frame 1
-		now = 1100;
+		currentTime = 1100;
 		expect(spinner.getFrame()).toBe("b");
 
 		// t=200 (1200) -> frame 2
-		now = 1200;
+		currentTime = 1200;
 		expect(spinner.getFrame()).toBe("c");
 
 		// t=300 (1300) -> frame 0 (loop)
-		now = 1300;
+		currentTime = 1300;
 		expect(spinner.getFrame()).toBe("a");
 	});
 
@@ -51,7 +46,7 @@ describe("Spinner Class", () => {
 		expect(spinner.getFrame()).toBe("a");
 
 		// t=50 -> frame 1
-		now = 1050;
+		currentTime = 1050;
 		expect(spinner.getFrame()).toBe("b");
 	});
 });
@@ -64,5 +59,6 @@ describe("Spinner Presets", () => {
 
 	test("lines preset exists", () => {
 		expect(SPINNERS.lines).toBeDefined();
+		expect(SPINNERS.lines.length).toBe(4);
 	});
 });
