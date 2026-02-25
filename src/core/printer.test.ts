@@ -1,6 +1,5 @@
 import { expect, test, describe, spyOn, afterEach } from "bun:test";
 import { Printer } from "./printer";
-import { PrintBlock } from "./types";
 import { resolveColorToAnsi } from "./style";
 import { line, segment, block } from "./builders";
 

@@ -9,7 +9,7 @@ import {
 	interpolateColor,
 	getGradientColor
 } from "./style";
-import { PrintStyle } from "./types";
+import { Color, PrintStyle } from "./types";
 
 const ESC = "\x1b";
 
@@ -82,7 +82,7 @@ describe("Style Resolution", () => {
 
 describe("Gradient Utilities", () => {
 	test("getGradientColor handles 2 colors", () => {
-		const colors = ["#000000", "#FFFFFF"];
+		const colors: Color[] = ["#000000", "#FFFFFF"];
 		// 0 -> black
 		// 0.5 -> middle color (gray)
 		// 1 -> white
@@ -92,7 +92,7 @@ describe("Gradient Utilities", () => {
 	});
 
 	test("getGradientColor handles 3 colors", () => {
-		const colors = ["#000000", "#808080", "#FFFFFF"];
+		const colors: Color[] = ["#000000", "#808080", "#FFFFFF"];
 		// 0 -> black
 		// 0.5 -> middle color (gray)
 		// 1 -> white

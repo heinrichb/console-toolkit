@@ -1,6 +1,5 @@
 import { expect, test, describe, spyOn, afterEach } from "bun:test";
 import { mergeColumns, printColumns } from "./layout";
-import { PrintLine } from "./types";
 import { getLineLength } from "./utils";
 import { line, segment } from "./builders";
 
