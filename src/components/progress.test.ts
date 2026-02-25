@@ -2,14 +2,17 @@ import { expect, test, describe } from "bun:test";
 import { createProgressBar } from "./progress";
 import { PrintLine } from "../core/types";
 
-function getText(line: PrintLine): string {
+/**
+ * Utility to extract plain text from a PrintLine.
+ */
+function getLineText(line: PrintLine): string {
 	return line.segments.map((s) => s.text).join("");
 }
 
 describe("createProgressBar", () => {
 	test("generates a default progress bar at 0%", () => {
 		const line = createProgressBar({ progress: 0 });
-		const text = getText(line);
+		const text = getLineText(line);
 
 		// Default format: [░░░░░░░░░░░░░░░░░░░░] 0%
 		expect(text).toContain("[");
@@ -20,7 +23,7 @@ describe("createProgressBar", () => {
 
 	test("generates a default progress bar at 50%", () => {
 		const line = createProgressBar({ progress: 0.5 });
-		const text = getText(line);
+		const text = getLineText(line);
 
 		expect(text).toContain("50%");
 		expect(text).toContain("█");
@@ -29,7 +32,7 @@ describe("createProgressBar", () => {
 
 	test("generates a default progress bar at 100%", () => {
 		const line = createProgressBar({ progress: 1.0 });
-		const text = getText(line);
+		const text = getLineText(line);
 
 		expect(text).toContain("100%");
 		// Should not contain empty char
@@ -90,7 +93,7 @@ describe("createProgressBar", () => {
 			fillChar: "=",
 			emptyChar: "-"
 		});
-		const text = getText(line);
+		const text = getLineText(line);
 		expect(text).toContain("<");
 		expect(text).toContain(">");
 		expect(text).toContain("=");
@@ -102,7 +105,7 @@ describe("createProgressBar", () => {
 			progress: 0.5,
 			showPercentage: false
 		});
-		const text = getText(line);
+		const text = getLineText(line);
 		expect(text).not.toContain("%");
 	});
 
@@ -111,33 +114,33 @@ describe("createProgressBar", () => {
 			progress: 0.5,
 			formatPercentage: (p) => `${p * 10}/10`
 		});
-		const text = getText(line);
+		const text = getLineText(line);
 		expect(text).toContain("5/10");
 	});
 
 	test("clamping progress", () => {
 		const lineLow = createProgressBar({ progress: -0.1 });
-		expect(getText(lineLow)).toContain("0%");
+		expect(getLineText(lineLow)).toContain("0%");
 
 		const lineHigh = createProgressBar({ progress: 1.1 });
-		expect(getText(lineHigh)).toContain("100%");
+		expect(getLineText(lineHigh)).toContain("100%");
 	});
 
 	test("clamping and validating width", () => {
 		// Negative width should not throw and should be treated as 0
 		expect(() => createProgressBar({ progress: 0.5, width: -10 })).not.toThrow();
 		const negativeLine = createProgressBar({ progress: 0.5, width: -10 });
-		expect(getText(negativeLine)).toBe("[] 50%");
+		expect(getLineText(negativeLine)).toBe("[] 50%");
 
 		// Infinity width should not throw and should be treated as 0 (safe fallback)
 		expect(() => createProgressBar({ progress: 0.5, width: Infinity })).not.toThrow();
 		const infinityLine = createProgressBar({ progress: 0.5, width: Infinity });
-		expect(getText(infinityLine)).toBe("[] 50%");
+		expect(getLineText(infinityLine)).toBe("[] 50%");
 
 		// NaN width should not throw and should be treated as 0 (safe fallback)
 		expect(() => createProgressBar({ progress: 0.5, width: NaN })).not.toThrow();
 		const nanLine = createProgressBar({ progress: 0.5, width: NaN });
-		expect(getText(nanLine)).toBe("[] 50%");
+		expect(getLineText(nanLine)).toBe("[] 50%");
 
 		// Very large width should be capped at 10000
 		const largeLine = createProgressBar({ progress: 1.0, width: 20000 });
