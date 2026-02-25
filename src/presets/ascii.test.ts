@@ -3,21 +3,17 @@ import { getDragon } from "./ascii";
 
 describe("Presets", () => {
 	test("getDragon returns valid array", () => {
-		const lines = getDragon();
-		expect(lines.length).toBeGreaterThan(0);
+		const dragon = getDragon();
+		expect(Array.isArray(dragon)).toBe(true);
+		expect(dragon.length).toBeGreaterThan(0);
 
-		const firstSegmentStyle = lines[0].segments[0].style;
-		expect(firstSegmentStyle).toBeDefined();
+		// Check that color is defined and is hex
+		const firstLine = dragon[0];
+		expect(firstLine.segments[0].style?.color).toBeDefined();
 
-		if (firstSegmentStyle) {
-			// Check that color is defined and is hex
-			expect(firstSegmentStyle.color).toBeDefined();
-			if (typeof firstSegmentStyle.color === "string") {
-				expect(firstSegmentStyle.color.startsWith("#")).toBe(true);
-			} else {
-				// Fail if it's not a string (e.g. array)
-				expect(typeof firstSegmentStyle.color).toBe("string");
-			}
-		}
+		const color = firstLine.segments[0].style?.color as string;
+		// Fail if it's not a string (e.g. array)
+		expect(typeof color).toBe("string");
+		expect(color.startsWith("#")).toBe(true);
 	});
 });

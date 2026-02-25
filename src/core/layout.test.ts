@@ -1,10 +1,10 @@
 import { expect, test, describe, spyOn, afterEach } from "bun:test";
 import { mergeColumns, printColumns } from "./layout";
-import { PrintLine } from "./types";
 import { getLineLength } from "./utils";
+import { line, segment } from "./builders";
 
-const lineA: PrintLine = { segments: [{ text: "Hello" }] };
-const lineB: PrintLine = { segments: [{ text: "World!!" }] };
+const lineA = line([segment("Hello")]);
+const lineB = line([segment("World!!")]);
 
 describe("Layout Utilities", () => {
 	const stdoutSpy = spyOn(process.stdout, "write").mockImplementation(() => true);
@@ -17,7 +17,6 @@ describe("Layout Utilities", () => {
 		// Column 1: [lineA]
 		// Column 2: [lineB, lineB]
 		// Separator: " | "
-		// Default Style: undefined
 		// Widths: [10] (first col width 10)
 		const merged = mergeColumns([[lineA], [lineB, lineB]], " | ", undefined, [10]);
 
@@ -40,7 +39,7 @@ describe("Layout Utilities", () => {
 	});
 
 	test("printColumns handles undefined style in segments", () => {
-		const lineNoStyle: PrintLine = { segments: [{ text: "NoStyle" }] };
+		const lineNoStyle = line([segment("NoStyle")]);
 		printColumns([[lineNoStyle]]);
 
 		expect(stdoutSpy).toHaveBeenCalled();
@@ -50,9 +49,6 @@ describe("Layout Utilities", () => {
 
 	test("printColumns handles empty columns", () => {
 		printColumns([]);
-		// Should just print nothing or minimal output (if logic handles empty array gracefully)
-		// mergeColumns returns []
-		// printer.print({ lines: [] }) -> might output clear sequence or empty string
 		expect(stdoutSpy).toHaveBeenCalled();
 	});
 
