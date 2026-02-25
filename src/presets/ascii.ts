@@ -1,5 +1,6 @@
 import { PrintLine, Color } from "../core/types";
 import { interpolateColor } from "../core/style";
+import { line, segment } from "../core/builders";
 
 // -----------------
 // Presets
@@ -34,6 +35,6 @@ export function getDragon(startColor: Color = "#EF4444", endColor: Color = "#F59
 	return rawDragon.map((text, i) => {
 		const factor = rawDragon.length <= 1 ? 0 : i / (rawDragon.length - 1);
 		const colorStyle = interpolateColor(startColor, endColor, factor);
-		return { segments: [{ text, style: { color: colorStyle } }] };
+		return line([segment(text, { color: colorStyle })]);
 	});
 }

@@ -1,4 +1,5 @@
 import { PrintLine, PrintSegment, PrintStyle } from "../core/types";
+import { line, segment } from "../core/builders";
 
 export interface ProgressBarOptions {
 	/**
@@ -131,29 +132,29 @@ export function createProgressBar(options: ProgressBarOptions): PrintLine {
 
 	// Start Bracket
 	if (startChar) {
-		segments.push({ text: startChar, style: resolvedStartStyle });
+		segments.push(segment(startChar, resolvedStartStyle));
 	}
 
 	// Filled Part
 	if (filledWidth > 0) {
-		segments.push({ text: fillChar.repeat(filledWidth), style: resolvedFillStyle });
+		segments.push(segment(fillChar.repeat(filledWidth), resolvedFillStyle));
 	}
 
 	// Empty Part
 	if (emptyWidth > 0) {
-		segments.push({ text: emptyChar.repeat(emptyWidth), style: resolvedEmptyStyle });
+		segments.push(segment(emptyChar.repeat(emptyWidth), resolvedEmptyStyle));
 	}
 
 	// End Bracket
 	if (endChar) {
-		segments.push({ text: endChar, style: resolvedEndStyle });
+		segments.push(segment(endChar, resolvedEndStyle));
 	}
 
 	// Percentage
 	if (showPercentage) {
 		const percentageText = formatPercentage ? formatPercentage(p) : ` ${Math.round(p * 100)}%`;
-		segments.push({ text: percentageText, style: resolvedPercentageStyle });
+		segments.push(segment(percentageText, resolvedPercentageStyle));
 	}
 
-	return { segments };
+	return line(segments);
 }
