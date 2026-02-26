@@ -141,7 +141,7 @@ describe("Style Security", () => {
 		// If STANDARD_COLORS inherits from Object.prototype, STANDARD_COLORS["constructor"] returns the function.
 		// colorToHex expects a string or undefined.
 		const dangerousInput = "constructor";
-		const result = colorToHex(dangerousInput as any);
+		const result = colorToHex(dangerousInput as unknown as Color);
 		// Should return fallback white, NOT the constructor function (which would be truthy but not a string)
 		expect(result).toBe("#FFFFFF");
 	});
@@ -149,6 +149,6 @@ describe("Style Security", () => {
 	test("resolveColorToAnsi should not crash with 'constructor'", () => {
 		const dangerousInput = "constructor";
 		// This will crash if colorToHex returns a function instead of a string
-		expect(() => resolveColorToAnsi(dangerousInput as any)).not.toThrow();
+		expect(() => resolveColorToAnsi(dangerousInput as unknown as Color)).not.toThrow();
 	});
 });
