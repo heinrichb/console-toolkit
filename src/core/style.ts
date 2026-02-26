@@ -10,7 +10,11 @@ const ESC = "\x1b";
  */
 export const RESET = `${ESC}[0m`;
 
-const STANDARD_COLORS: Record<StandardColor, string> = {
+/**
+ * Standard ANSI color codes.
+ * Initialized with Object.create(null) to prevent prototype pollution.
+ */
+const STANDARD_COLORS: Record<StandardColor, string> = Object.assign(Object.create(null), {
 	black: "#000000",
 	red: "#EF4444", // Tailwind Red-500
 	green: "#10B981", // Tailwind Emerald-500
@@ -21,9 +25,13 @@ const STANDARD_COLORS: Record<StandardColor, string> = {
 	white: "#FFFFFF",
 	gray: "#6B7280", // Tailwind Gray-500
 	grey: "#6B7280"
-};
+});
 
-const MODIFIER_CODES: Record<StyleModifier, string> = {
+/**
+ * ANSI codes for text modifiers.
+ * Initialized with Object.create(null) to prevent prototype pollution.
+ */
+const MODIFIER_CODES: Record<StyleModifier, string> = Object.assign(Object.create(null), {
 	default: "0",
 	bold: "1",
 	dim: "2",
@@ -32,7 +40,7 @@ const MODIFIER_CODES: Record<StyleModifier, string> = {
 	inverse: "7",
 	hidden: "8",
 	strikethrough: "9"
-};
+});
 
 /**
  * Converts any Color (hex or standard name) to a Hex string.

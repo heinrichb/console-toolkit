@@ -1,5 +1,6 @@
 import { expect, test, describe } from "bun:test";
 import {
+	colorToHex,
 	hexToRgb,
 	rgbToAnsi,
 	resolveColorToAnsi,
@@ -137,5 +138,22 @@ describe("Style Merging", () => {
 		expect(mergeStyles(p, undefined)).toEqual(p);
 		expect(mergeStyles(undefined, p)).toEqual(p);
 		expect(mergeStyles(undefined, undefined)).toEqual({});
+	});
+});
+
+describe("Style Security", () => {
+	test("colorToHex should not crash with 'constructor'", () => {
+		// Verify prevention of prototype pollution crashes (DoS).
+		// colorToHex uses dictionary lookups that must safely handle "constructor".
+		const dangerousInput = "constructor";
+		const result = colorToHex(dangerousInput as unknown as Color);
+		// Should return fallback white (#FFFFFF), not crash or return a function.
+		expect(result).toBe("#FFFFFF");
+	});
+
+	test("resolveColorToAnsi should not crash with 'constructor'", () => {
+		const dangerousInput = "constructor";
+		// Verify full resolution pipeline is safe against property masking.
+		expect(() => resolveColorToAnsi(dangerousInput as unknown as Color)).not.toThrow();
 	});
 });
