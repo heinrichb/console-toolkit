@@ -3,6 +3,7 @@ import {
 	hexToRgb,
 	rgbToAnsi,
 	resolveColorToAnsi,
+	resolveColorToRgb,
 	resolveModifiersToAnsi,
 	resolveStyle,
 	mergeStyles,
@@ -32,6 +33,11 @@ describe("Color Utilities", () => {
 	test("resolveColorToAnsi converts hex and standard colors", () => {
 		expect(resolveColorToAnsi("#000000")).toBe(`${ESC}[38;2;0;0;0m`);
 		expect(resolveColorToAnsi("red")).toBe(`${ESC}[38;2;239;68;68m`); // Updated to Tailwind value
+	});
+
+	test("resolveColorToRgb converts color to RGB object", () => {
+		expect(resolveColorToRgb("#FF0000")).toEqual({ r: 255, g: 0, b: 0 });
+		expect(resolveColorToRgb("green")).toEqual({ r: 16, g: 185, b: 129 }); // Tailwind value
 	});
 
 	test("interpolateColor returns hex string for hex inputs", () => {
