@@ -137,18 +137,17 @@ describe("Style Merging", () => {
 
 describe("Style Security", () => {
 	test("colorToHex should not crash with 'constructor'", () => {
-		// "constructor" is a property on Object.prototype.
-		// If STANDARD_COLORS inherits from Object.prototype, STANDARD_COLORS["constructor"] returns the function.
-		// colorToHex expects a string or undefined.
+		// Verify prevention of prototype pollution crashes (DoS).
+		// colorToHex uses dictionary lookups that must safely handle "constructor".
 		const dangerousInput = "constructor";
 		const result = colorToHex(dangerousInput as unknown as Color);
-		// Should return fallback white, NOT the constructor function (which would be truthy but not a string)
+		// Should return fallback white (#FFFFFF), not crash or return a function.
 		expect(result).toBe("#FFFFFF");
 	});
 
 	test("resolveColorToAnsi should not crash with 'constructor'", () => {
 		const dangerousInput = "constructor";
-		// This will crash if colorToHex returns a function instead of a string
+		// Verify full resolution pipeline is safe against property masking.
 		expect(() => resolveColorToAnsi(dangerousInput as unknown as Color)).not.toThrow();
 	});
 });

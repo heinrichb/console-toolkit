@@ -10,6 +10,10 @@ const ESC = "\x1b";
  */
 export const RESET = `${ESC}[0m`;
 
+/**
+ * Standard ANSI color codes.
+ * Initialized with Object.create(null) to prevent prototype pollution.
+ */
 const STANDARD_COLORS: Record<StandardColor, string> = Object.assign(Object.create(null), {
 	black: "#000000",
 	red: "#EF4444", // Tailwind Red-500
@@ -23,6 +27,10 @@ const STANDARD_COLORS: Record<StandardColor, string> = Object.assign(Object.crea
 	grey: "#6B7280"
 });
 
+/**
+ * ANSI codes for text modifiers.
+ * Initialized with Object.create(null) to prevent prototype pollution.
+ */
 const MODIFIER_CODES: Record<StyleModifier, string> = Object.assign(Object.create(null), {
 	default: "0",
 	bold: "1",
