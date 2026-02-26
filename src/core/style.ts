@@ -74,6 +74,14 @@ export function resolveColorToAnsi(color: Color): string {
 }
 
 /**
+ * Resolves a Color (Standard or Hex) to an RGB object.
+ */
+export function resolveColorToRgb(color: Color): { r: number; g: number; b: number } {
+	const hex = colorToHex(color);
+	return hexToRgb(hex);
+}
+
+/**
  * Converts a list of modifiers to an ANSI escape sequence.
  */
 export function resolveModifiersToAnsi(modifiers?: StyleModifier[]): string {
@@ -129,11 +137,14 @@ export function getGradientColor(colors: Color[], factor: number): string {
 	const segmentIndex = Math.min(Math.floor(f / segmentLength), colors.length - 2);
 	const segmentFactor = (f - segmentIndex * segmentLength) / segmentLength;
 
-	const c1 = colors[segmentIndex];
-	const c2 = colors[segmentIndex + 1];
+	const c1 = resolveColorToRgb(colors[segmentIndex]);
+	const c2 = resolveColorToRgb(colors[segmentIndex + 1]);
 
-	const hex = interpolateColor(c1, c2, segmentFactor);
-	return resolveColorToAnsi(hex);
+	const r = Math.round(c1.r + segmentFactor * (c2.r - c1.r));
+	const g = Math.round(c1.g + segmentFactor * (c2.g - c1.g));
+	const b = Math.round(c1.b + segmentFactor * (c2.b - c1.b));
+
+	return rgbToAnsi(r, g, b);
 }
 
 // -----------------
