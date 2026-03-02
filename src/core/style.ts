@@ -150,7 +150,34 @@ export function mergeStyles(parent?: PrintStyle, child?: PrintStyle): PrintStyle
 	if (!parent) return child ?? {};
 	if (!child) return parent;
 
-	const mergedModifiers = Array.from(new Set([...(parent.modifiers ?? []), ...(child.modifiers ?? [])]));
+	const parentModifiers = parent.modifiers;
+	const childModifiers = child.modifiers;
+
+	let mergedModifiers;
+
+	if (!parentModifiers || parentModifiers.length === 0) {
+		mergedModifiers = childModifiers;
+	} else if (!childModifiers || childModifiers.length === 0) {
+		mergedModifiers = parentModifiers;
+	} else {
+		// Both have modifiers, merge and de-duplicate
+		const result = [];
+		// De-duplicate parent modifiers and add them
+		for (let i = 0; i < parentModifiers.length; i++) {
+			const mod = parentModifiers[i];
+			if (result.indexOf(mod) === -1) {
+				result.push(mod);
+			}
+		}
+		// Add child modifiers if not already present
+		for (let i = 0; i < childModifiers.length; i++) {
+			const mod = childModifiers[i];
+			if (result.indexOf(mod) === -1) {
+				result.push(mod);
+			}
+		}
+		mergedModifiers = result;
+	}
 
 	return {
 		modifiers: mergedModifiers,
