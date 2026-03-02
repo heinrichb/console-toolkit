@@ -1,5 +1,13 @@
 import { Color, PrintBlock, PrinterOptions, PrintLine, PrintStyle } from "./types";
-import { getGradientColor, mergeStyles, resolveStyle, RESET, interpolateColor, resolveModifiersToAnsi } from "./style";
+import {
+	mergeStyles,
+	resolveStyle,
+	RESET,
+	interpolateColor,
+	resolveModifiersToAnsi,
+	resolveColorToRgb,
+	getGradientColorFromRgb
+} from "./style";
 
 const ESC = "\x1b";
 
@@ -110,7 +118,7 @@ export class Printer {
 		// 4. Pre-calculate total chars for horizontal gradients
 		const totalChars = line.segments.reduce((acc, seg) => acc + seg.text.length, 0);
 		let currentCharIndex = 0;
-		let lineOutput = "";
+		const lineOutput: string[] = [];
 
 		line.segments.forEach((seg) => {
 			const effectiveSegmentStyle = mergeStyles(effectiveLineStyle, seg.style);
@@ -127,6 +135,7 @@ export class Printer {
 
 				// Iterate characters to apply gradient
 				const modifiersAnsi = resolveModifiersToAnsi(effectiveSegmentStyle.modifiers);
+				const rgbColors = colors.map(resolveColorToRgb);
 
 				for (let i = 0; i < text.length; i++) {
 					let factor = 0;
@@ -136,19 +145,19 @@ export class Printer {
 						factor = i / (text.length - 1);
 					}
 
-					const colorAnsi = getGradientColor(colors, factor); // Returns ANSI Color Code
-					lineOutput += `${modifiersAnsi}${colorAnsi}${text[i]}`;
+					const colorAnsi = getGradientColorFromRgb(rgbColors, factor); // Returns ANSI Color Code
+					lineOutput.push(`${modifiersAnsi}${colorAnsi}${text[i]}`);
 				}
-				lineOutput += RESET;
+				lineOutput.push(RESET);
 			} else {
 				// Solid Color Handling
 				const ansi = resolveStyle(effectiveSegmentStyle);
-				lineOutput += `${ansi}${seg.text}${RESET}`;
+				lineOutput.push(`${ansi}${seg.text}${RESET}`);
 			}
 
 			currentCharIndex += seg.text.length;
 		});
 
-		return lineOutput;
+		return lineOutput.join("");
 	}
 }

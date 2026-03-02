@@ -84,3 +84,12 @@ export interface PrinterOptions {
 	 */
 	data?: PrintBlock;
 }
+
+/**
+ * RGB color representation.
+ */
+export interface RGB {
+	r: number;
+	g: number;
+	b: number;
+}
