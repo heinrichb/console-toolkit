@@ -153,7 +153,7 @@ export function mergeStyles(parent?: PrintStyle, child?: PrintStyle): PrintStyle
 	const parentModifiers = parent.modifiers;
 	const childModifiers = child.modifiers;
 
-	let mergedModifiers;
+	let mergedModifiers: StyleModifier[] | undefined;
 
 	if (!parentModifiers || parentModifiers.length === 0) {
 		mergedModifiers = childModifiers;
@@ -161,7 +161,7 @@ export function mergeStyles(parent?: PrintStyle, child?: PrintStyle): PrintStyle
 		mergedModifiers = parentModifiers;
 	} else {
 		// Both have modifiers, merge and de-duplicate
-		const result = [];
+		const result: StyleModifier[] = [];
 		// De-duplicate parent modifiers and add them
 		for (let i = 0; i < parentModifiers.length; i++) {
 			const mod = parentModifiers[i];
