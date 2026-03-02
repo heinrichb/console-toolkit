@@ -1,5 +1,13 @@
 import { Color, PrintBlock, PrinterOptions, PrintLine, PrintStyle } from "./types";
-import { getGradientColor, mergeStyles, resolveStyle, RESET, interpolateColor, resolveModifiersToAnsi } from "./style";
+import {
+	getGradientColorFromRgb,
+	resolveColorToRgb,
+	mergeStyles,
+	resolveStyle,
+	RESET,
+	interpolateColor,
+	resolveModifiersToAnsi
+} from "./style";
 
 const ESC = "\x1b";
 
@@ -125,6 +133,9 @@ export class Printer {
 				// Otherwise it's the segment's own gradient (Local)
 				const isGlobalGradient = effectiveSegmentStyle.color === effectiveLineStyle.color;
 
+				// Pre-resolve RGB colors for performance optimization
+				const rgbColors = colors.map(resolveColorToRgb);
+
 				// Iterate characters to apply gradient
 				const modifiersAnsi = resolveModifiersToAnsi(effectiveSegmentStyle.modifiers);
 
@@ -136,7 +147,8 @@ export class Printer {
 						factor = i / (text.length - 1);
 					}
 
-					const colorAnsi = getGradientColor(colors, factor); // Returns ANSI Color Code
+					// Use pre-resolved RGB colors
+					const colorAnsi = getGradientColorFromRgb(rgbColors, factor); // Returns ANSI Color Code
 					lineOutput += `${modifiersAnsi}${colorAnsi}${text[i]}`;
 				}
 				lineOutput += RESET;

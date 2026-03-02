@@ -1,4 +1,4 @@
-import { Color, HexColor, PrintStyle, StandardColor, StyleModifier } from "./types";
+import { Color, HexColor, PrintStyle, StandardColor, StyleModifier, RGB } from "./types";
 
 // -----------------
 // Color Utilities
@@ -55,7 +55,7 @@ export function colorToHex(color: Color): string {
 /**
  * Converts a hex color string to an RGB object.
  */
-export function hexToRgb(hex: string): { r: number; g: number; b: number } {
+export function hexToRgb(hex: string): RGB {
 	const h = hex.replace(/^#/, "");
 	if (h.length !== 6) return { r: 255, g: 255, b: 255 }; // Fallback for invalid hex
 	return {
@@ -84,7 +84,7 @@ export function resolveColorToAnsi(color: Color): string {
 /**
  * Resolves a Color (Standard or Hex) to an RGB object.
  */
-export function resolveColorToRgb(color: Color): { r: number; g: number; b: number } {
+export function resolveColorToRgb(color: Color): RGB {
 	const hex = colorToHex(color);
 	return hexToRgb(hex);
 }
@@ -131,11 +131,12 @@ export function interpolateColor(color1: Color, color2: Color, factor: number): 
 }
 
 /**
- * logic to get a specific color from a multi-stop gradient array at a specific factor (0-1).
+ * Logic to get a specific color from a multi-stop gradient array at a specific factor (0-1).
+ * Uses pre-resolved RGB colors for performance.
  */
-export function getGradientColor(colors: Color[], factor: number): string {
+export function getGradientColorFromRgb(colors: RGB[], factor: number): string {
 	if (colors.length === 0) return "";
-	if (colors.length === 1) return resolveColorToAnsi(colors[0]);
+	if (colors.length === 1) return rgbToAnsi(colors[0].r, colors[0].g, colors[0].b);
 
 	const f = Math.max(0, Math.min(1, factor));
 	// Map factor to segments between colors
@@ -145,14 +146,23 @@ export function getGradientColor(colors: Color[], factor: number): string {
 	const segmentIndex = Math.min(Math.floor(f / segmentLength), colors.length - 2);
 	const segmentFactor = (f - segmentIndex * segmentLength) / segmentLength;
 
-	const c1 = resolveColorToRgb(colors[segmentIndex]);
-	const c2 = resolveColorToRgb(colors[segmentIndex + 1]);
+	const c1 = colors[segmentIndex];
+	const c2 = colors[segmentIndex + 1];
 
 	const r = Math.round(c1.r + segmentFactor * (c2.r - c1.r));
 	const g = Math.round(c1.g + segmentFactor * (c2.g - c1.g));
 	const b = Math.round(c1.b + segmentFactor * (c2.b - c1.b));
 
 	return rgbToAnsi(r, g, b);
+}
+
+/**
+ * logic to get a specific color from a multi-stop gradient array at a specific factor (0-1).
+ */
+export function getGradientColor(colors: Color[], factor: number): string {
+	if (colors.length === 0) return "";
+	const rgbColors = colors.map(resolveColorToRgb);
+	return getGradientColorFromRgb(rgbColors, factor);
 }
 
 // -----------------

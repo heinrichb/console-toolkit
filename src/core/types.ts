@@ -23,6 +23,15 @@ export type HexColor = `#${string}`;
 export type Color = StandardColor | HexColor;
 
 /**
+ * Represents an RGB color value.
+ */
+export interface RGB {
+	r: number;
+	g: number;
+	b: number;
+}
+
+/**
  * Represents the style configuration for a text segment, line, or block.
  */
 export interface PrintStyle {
