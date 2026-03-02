@@ -101,6 +101,14 @@ describe("Gradient Utilities", () => {
 		expect(getGradientColor(colors, 0.5)).toBe(`${ESC}[38;2;128;128;128m`);
 		expect(getGradientColor(colors, 1)).toBe(`${ESC}[38;2;255;255;255m`);
 	});
+
+	test("getGradientColor handles empty colors array", () => {
+		expect(getGradientColor([], 0)).toBe("");
+	});
+
+	test("getGradientColor handles single color array", () => {
+		expect(getGradientColor(["#FF0000"], 0.5)).toBe(`${ESC}[38;2;255;0;0m`);
+	});
 });
 
 describe("Style Merging", () => {
