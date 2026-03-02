@@ -1,9 +1,7 @@
 import { expect, test, describe, spyOn, afterEach } from "bun:test";
 import { Printer } from "./printer";
-import { resolveColorToAnsi } from "./style";
+import { resolveColorToAnsi, ESC } from "./style";
 import { line, segment, block } from "./builders";
-
-const ESC = "\x1b";
 
 describe("Printer", () => {
 	const stdoutSpy = spyOn(process.stdout, "write").mockImplementation(() => true);

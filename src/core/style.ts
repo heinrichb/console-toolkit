@@ -4,7 +4,10 @@ import { Color, HexColor, PrintStyle, StandardColor, StyleModifier } from "./typ
 // Color Utilities
 // -----------------
 
-const ESC = "\x1b";
+/**
+ * ANSI Escape Character.
+ */
+export const ESC = "\x1b";
 /**
  * ANSI escape sequence to reset all styles.
  */

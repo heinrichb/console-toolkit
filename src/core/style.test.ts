@@ -7,11 +7,10 @@ import {
 	resolveStyle,
 	mergeStyles,
 	interpolateColor,
-	getGradientColor
+	getGradientColor,
+	ESC
 } from "./style";
 import { Color, PrintStyle } from "./types";
-
-const ESC = "\x1b";
 
 describe("Color Utilities", () => {
 	test("hexToRgb converts correctly", () => {

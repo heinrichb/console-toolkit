@@ -1,7 +1,5 @@
 import { Color, PrintBlock, PrinterOptions, PrintLine, PrintStyle } from "./types";
-import { getGradientColor, mergeStyles, resolveStyle, RESET, interpolateColor, resolveModifiersToAnsi } from "./style";
-
-const ESC = "\x1b";
+import { getGradientColor, mergeStyles, resolveStyle, RESET, interpolateColor, resolveModifiersToAnsi, ESC } from "./style";
 
 /**
  * Handles rendering PrintBlocks to the terminal with support for interactive/live overwriting.
