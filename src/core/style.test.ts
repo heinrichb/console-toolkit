@@ -41,7 +41,6 @@ describe("Color Utilities", () => {
 		expect(resolveColorToRgb("#FF0000")).toEqual({ r: 255, g: 0, b: 0 });
 		expect(resolveColorToRgb("green")).toEqual({ r: 16, g: 185, b: 129 }); // Tailwind value
 	});
-
 });
 
 describe("Style Resolution", () => {

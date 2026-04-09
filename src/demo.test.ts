@@ -26,15 +26,15 @@ describe("Demo Script", () => {
 		await runDemo();
 
 		expect(clearSpy).toHaveBeenCalled();
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Basic Styling"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Builder Functions"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Horizontal Gradients"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Vertical Gradients"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Colors & Modifiers"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Gradients"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Multi-Column Layouts"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Live Progress Bar Demo"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Spinners Demo"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Tables"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Progress Bar"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Spinners"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("ASCII Presets"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Demo Complete!"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Render to String"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Demo complete!"));
 		expect(stdoutSpy).toHaveBeenCalled();
 	});
 });
