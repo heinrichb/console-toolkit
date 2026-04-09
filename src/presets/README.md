@@ -1,6 +1,6 @@
 # 🐉 Presets & Assets
 
-Sometimes you just need something cool without writing it from scratch. This directory contains pre-built assets and complex layouts that you can drop directly into your application.
+Pre-built assets you can drop directly into your application — ASCII art with customizable gradients and ready-made color palettes.
 
 ---
 
@@ -8,22 +8,115 @@ Sometimes you just need something cool without writing it from scratch. This dir
 
 ### The Dragon (`getDragon`)
 
-A majestic dragon, perfect for banners or error screens. You can customize the color gradient that runs vertically across the art.
+A majestic dragon rendered as `PrintLine[]` with a vertical color gradient. The function accepts three calling styles:
 
 ```typescript
-import { getDragon, Printer, block } from "@heinrichb/console-toolkit";
+getDragon(); // Default: red -> amber
+getDragon(startColor, endColor); // Two-color gradient
+getDragon(colorArray); // Multi-stop gradient (Color[])
+```
+
+**Signature:**
+
+```typescript
+function getDragon(colorsOrStart?: Color | Color[], endColor?: Color): PrintLine[];
+```
+
+- When called with no arguments, defaults to red (`#EF4444`) to amber (`#F59E0B`).
+- When called with a single `Color`, pairs it with amber as the end color.
+- When called with a `Color[]`, uses the full array as multi-stop gradient stops.
+- When called with two `Color` arguments, uses them as start and end.
+
+### Examples
+
+```typescript
+import { getDragon, Printer, block, GRADIENTS } from "@heinrichb/console-toolkit";
 
 const printer = new Printer();
 
-// Default Dragon (Red -> Yellow)
-const dragon = getDragon();
-printer.print(block(dragon));
+// Default red-to-amber dragon
+printer.print(block(getDragon()));
 
-// Custom Colors (Blue -> Cyan)
-const iceDragon = getDragon("#3B82F6", "#06B6D4");
-printer.print(block(iceDragon));
+// Two-color ice dragon
+printer.print(block(getDragon("#3B82F6", "#06B6D4")));
+
+// Multi-stop fire dragon using a gradient preset
+printer.print(block(getDragon(GRADIENTS.fire)));
+
+// Multi-stop custom gradient
+printer.print(block(getDragon(["#FF0000", "#00FF00", "#0000FF"])));
+```
+
+### Side-by-Side Dragons
+
+Combine with `printColumns` for dramatic layouts:
+
+```typescript
+import { getDragon, printColumns, Printer, GRADIENTS } from "@heinrichb/console-toolkit";
+
+const printer = new Printer();
+
+printColumns([getDragon(GRADIENTS.fire), getDragon(GRADIENTS.ocean)], {
+	separator: "   ",
+	printer
+});
 ```
 
 ---
 
-_More presets coming soon! Check back for updates._
+## 🌈 Gradient Presets (`GRADIENTS`)
+
+Pre-defined color arrays for common use cases. Use with any `color` or `bgColor` property that accepts `Color[]`.
+
+```typescript
+import { GRADIENTS } from "@heinrichb/console-toolkit";
+```
+
+| Preset       | Colors                                                           | Description                             |
+| :----------- | :--------------------------------------------------------------- | :-------------------------------------- |
+| `rainbow`    | `#EF4444`, `#F59E0B`, `#10B981`, `#06B6D4`, `#3B82F6`, `#8B5CF6` | Full spectrum: red through violet       |
+| `ocean`      | `#1E3A5F`, `#0E7490`, `#06B6D4`, `#67E8F9`                       | Deep navy to light cyan                 |
+| `fire`       | `#7F1D1D`, `#EF4444`, `#F59E0B`, `#FDE047`                       | Dark red to bright yellow               |
+| `sunset`     | `#7C3AED`, `#EC4899`, `#F97316`, `#FBBF24`                       | Violet through pink and orange to amber |
+| `forest`     | `#064E3B`, `#10B981`, `#84CC16`, `#BEF264`                       | Dark emerald to light lime              |
+| `monochrome` | `#000000`, `#6B7280`, `#FFFFFF`                                  | Black through gray to white             |
+
+### Using Gradient Presets
+
+**Horizontal gradient on a line:**
+
+```typescript
+import { Printer, segment, line, block, GRADIENTS } from "@heinrichb/console-toolkit";
+
+const printer = new Printer();
+printer.print(block([line([segment("Rainbow text across the line")], { color: GRADIENTS.rainbow })]));
+```
+
+**Vertical gradient on a block:**
+
+```typescript
+import { Printer, segment, line, block, GRADIENTS } from "@heinrichb/console-toolkit";
+
+const printer = new Printer();
+
+const lines = Array.from({ length: 8 }, (_, i) => line([segment(`  Fire gradient line ${i + 1}  `)]));
+printer.print(block(lines, { color: GRADIENTS.fire }));
+```
+
+**Background gradient:**
+
+```typescript
+import { Printer, segment, line, block, GRADIENTS } from "@heinrichb/console-toolkit";
+
+const printer = new Printer();
+printer.print(block([line([segment("  Ocean background  ", { color: "white", bgColor: GRADIENTS.ocean })])]));
+```
+
+**With `interpolateGradient` for custom logic:**
+
+```typescript
+import { interpolateGradient, GRADIENTS } from "@heinrichb/console-toolkit";
+
+// Get the color at 25% through the sunset gradient
+const color = interpolateGradient(GRADIENTS.sunset, 0.25);
+```

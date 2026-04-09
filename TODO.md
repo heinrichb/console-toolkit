@@ -1,107 +1,89 @@
-## Background Color Support
-### Story: Add `bgColor` to PrintStyle
-**Description:**
-Add a `bgColor` property to `PrintStyle` that works identically to `color` but applies ANSI background color codes (48;2;R;G;B). Support solid colors, hex colors, and gradient arrays. Update `resolveStyle` to emit both foreground and background ANSI sequences. Ensure gradient backgrounds work for both horizontal and vertical directions.
+## Near-Term Features
 
-**Tasks:**
-- [ ] Add `bgColor` to `PrintStyle` interface in `types.ts`
-- [ ] Update `resolveStyle` in `style.ts` to handle background colors
-- [ ] Add background gradient support in `printer.ts` render path
-- [ ] Add tests for all background color scenarios
-- [ ] Update demo with background color examples
-- [ ] Update documentation
+### Node.js Compatibility Testing
 
-**Difficulty:** Medium
+Add Node.js test job to CI. Verify `process.stdout.write`, `Date.now()`, and ANSI output work identically across runtimes. Test with Node.js 18, 20, and 22. Medium effort.
 
----
+### Box Drawing Component
 
-## Render to String
-### Story: Add `Printer.renderToString()` method
-**Description:**
-Add a method to `Printer` that returns the rendered output as a string instead of writing to stdout. This enables testing rendered output directly, capturing output for logging, and composing output before displaying. The method should share the same rendering logic as `print()` without the stdout write.
+`createBox(content: PrintLine[], options)` that wraps arbitrary content in a bordered box with configurable border styles (reuse existing table border character sets). Simpler than tables — single content area instead of a grid. Low effort.
 
-**Tasks:**
-- [ ] Add `renderToString(data?: PrintBlock): string` to `Printer`
-- [ ] Extract shared rendering logic from `print()`
-- [ ] Add tests verifying string output matches stdout output
-- [ ] Update documentation
+### Row-Level Table Styles
 
-**Difficulty:** Low
+Add `rowStyles?: PrintStyle[]` to `TableOptions` for per-row style overrides. Primary use case: alternating row colors. Low effort.
+
+### Text Wrapping
+
+Add `wrap?: number` option to `printColumns` that wraps long segments at word boundaries to fit column widths. Medium effort — requires splitting segments while preserving styles.
 
 ---
 
-## Named Gradient Presets
-### Story: Create reusable gradient color arrays
-**Description:**
-Export a `GRADIENTS` object with commonly used color arrays (rainbow, ocean, fire, sunset, etc.) that users can plug into any `color` array property. Similar to how `SPINNERS` provides preset frame arrays.
+## API Improvements
 
-**Tasks:**
-- [ ] Create `src/presets/gradients.ts` with preset arrays
-- [ ] Export from `index.ts`
-- [ ] Add tests for preset definitions
-- [ ] Add demo section showing gradient presets
-- [ ] Update documentation
+### Fluent/Chainable Builder API
 
-**Difficulty:** Low
+`segment("text").bold().color("red").bgColor("blue")` as an alternative to the object literal style. Returns the same `PrintSegment` — purely syntactic sugar. Medium effort.
 
----
+### Clickable Hyperlinks
 
-## Table Component
-### Story: Build a table renderer with borders and auto-sizing
-**Description:**
-Create a `createTable` function that takes headers and rows, automatically computes column widths, and renders with configurable borders (box-drawing characters). Should support style cascading for headers, rows, and cells. Build on top of `mergeColumns` and `padLine` utilities.
+OSC 8 escape sequences (`\x1b]8;;URL\x1b\\text\x1b]8;;\x1b\\`). Add `link?: string` to `PrintStyle`. Low effort for basic support.
 
-**Tasks:**
-- [ ] Design `TableOptions` interface (headers, rows, border style, column widths)
-- [ ] Implement `createTable` returning `PrintLine[]`
-- [ ] Add box-drawing border characters (single, double, rounded)
-- [ ] Add tests for various table configurations
-- [ ] Add demo section
-- [ ] Add documentation
+### API Surface Cleanup
 
-**Difficulty:** High
+Consider internalizing exports that are only used internally: `getGradientColorFromRgb`, `getGradientBgColorFromRgb`, `ESC`. Not harmful, but they clutter the public API.
 
 ---
 
-## ANSI Strip Utility
-### Story: Add utility to strip ANSI codes from rendered output
-**Description:**
-Add a `stripAnsi(text: string): string` utility that removes all ANSI escape sequences from a string. Useful for calculating true display widths, logging plain text, and testing rendered output content.
+## Multi-Language Monorepo Expansion
 
-**Tasks:**
-- [ ] Implement `stripAnsi` in `utils.ts`
-- [ ] Export from `index.ts`
-- [ ] Add tests with various ANSI sequences
-- [ ] Update documentation
+The core ideas — ANSI color math, gradient interpolation, style cascading, column layout — are language-agnostic. The long-term goal is a monorepo publishing packages for multiple languages (TypeScript/npm, Python/PyPI, Rust/crates.io, Go/go.mod) with a shared source of truth for data and test fixtures.
 
-**Difficulty:** Low
+### Architecture
 
----
+```
+console-toolkit/
+├── spec/                          # Shared source of truth
+│   ├── colors.json                # Standard color palette (name -> hex)
+│   ├── modifiers.json             # ANSI modifier codes (name -> code)
+│   ├── spinners.json              # Spinner frame presets
+│   ├── gradients.json             # Gradient color presets
+│   ├── borders.json               # Box-drawing character sets
+│   ├── ascii-art/                 # ASCII art data files
+│   │   └── dragon.txt
+│   ├── test-fixtures/             # Input/expected-output pairs
+│   │   ├── color-conversion.json  # hexToRgb, rgbToHex vectors
+│   │   ├── gradient.json          # Multi-stop interpolation vectors
+│   │   ├── style-merging.json     # mergeStyles test cases
+│   │   └── rendering.json         # Full render tree -> ANSI string
+│   └── algorithms.md              # Pseudocode for gradient math, etc.
+├── packages/
+│   ├── typescript/                # Current codebase (npm)
+│   ├── python/                    # PyPI package
+│   ├── rust/                      # crates.io package
+│   └── go/                        # go module
+└── tools/
+    ├── validate-fixtures.ts       # Test all langs against shared fixtures
+    └── gen-spec-data.ts           # Extract spec/ from TypeScript source
+```
 
-## Node.js Compatibility Testing
-### Story: Verify and document Node.js runtime compatibility
-**Description:**
-The library is developed with Bun but should work in Node.js 18+. Set up a Node.js test runner in CI to verify compatibility. Document any Bun-specific behavior and ensure the published package works with both runtimes.
+### Shared as Data (JSON in `spec/`)
 
-**Tasks:**
-- [ ] Add Node.js test job to CI pipeline
-- [ ] Identify and fix any Bun-specific code paths
-- [ ] Document runtime compatibility in README
-- [ ] Test with Node.js 18, 20, and 22
+Color palettes, modifier codes, spinner frames, gradient presets, border characters, ASCII art. Test fixture vectors — every language's test suite loads these and verifies identical output.
 
-**Difficulty:** Medium
+### Shared as Algorithm Specs (pseudocode in `spec/algorithms.md`)
 
----
+Hex/RGB conversion, linear RGB interpolation, multi-stop gradient segment math, style merging rules (child overrides parent color, modifiers union), rendering algorithm (block -> line -> segment loop with per-character gradients).
 
-## Multi-Stop Dragon Gradient
-### Story: Extend `getDragon` to accept Color arrays
-**Description:**
-Currently `getDragon` accepts two colors (start/end). Extend it to accept a `Color[]` array for multi-stop vertical gradients, leveraging `interpolateGradient`. Maintain backwards compatibility with the two-argument form.
+### Reimplemented per Language (~200-400 lines each)
 
-**Tasks:**
-- [ ] Update `getDragon` signature to accept `Color | Color[]` for gradient
-- [ ] Use `interpolateGradient` for multi-stop support
-- [ ] Add tests for multi-stop dragon gradients
-- [ ] Update demo and documentation
+I/O layer, type system, timer API for spinners.
 
-**Difficulty:** Low
+### Migration Plan
+
+1. Move TypeScript into `packages/typescript/`, update npm publish path
+2. Extract `spec/` from current TypeScript source
+3. Update TypeScript tests to load from shared fixtures
+4. Implement Python package, test against same fixtures
+5. Implement Rust package
+6. Implement Go package
+7. Add cross-language CI that validates all packages against shared fixtures

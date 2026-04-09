@@ -3,6 +3,7 @@ import {
 	ESC,
 	getGradientColorFromRgb,
 	getGradientBgColorFromRgb,
+	rgbToAnsi,
 	rgbToBgAnsi,
 	resolveColorToRgb,
 	mergeStyles,
@@ -137,24 +138,24 @@ export class Printer {
 				const isGlobalGradient = effectiveSegmentStyle.color === effectiveLineStyle.color;
 
 				// Pre-resolve foreground colors
-				const fgRgbColors = hasFgGradient ? (effectiveSegmentStyle.color as Color[]).map(resolveColorToRgb) : undefined;
-				const solidFgAnsi =
-					!hasFgGradient && effectiveSegmentStyle.color
-						? (() => {
-								const { r, g, b } = resolveColorToRgb(effectiveSegmentStyle.color as Color);
-								return `\x1b[38;2;${r};${g};${b}m`;
-							})()
-						: "";
+				let fgRgbColors: ReturnType<typeof resolveColorToRgb>[] | undefined;
+				let solidFgAnsi = "";
+				if (hasFgGradient) {
+					fgRgbColors = (effectiveSegmentStyle.color as Color[]).map(resolveColorToRgb);
+				} else if (effectiveSegmentStyle.color) {
+					const { r, g, b } = resolveColorToRgb(effectiveSegmentStyle.color as Color);
+					solidFgAnsi = rgbToAnsi(r, g, b);
+				}
 
 				// Pre-resolve background colors
-				const bgRgbColors = hasBgGradient ? (effectiveSegmentStyle.bgColor as Color[]).map(resolveColorToRgb) : undefined;
-				const solidBgAnsi =
-					!hasBgGradient && effectiveSegmentStyle.bgColor
-						? (() => {
-								const { r, g, b } = resolveColorToRgb(effectiveSegmentStyle.bgColor as Color);
-								return rgbToBgAnsi(r, g, b);
-							})()
-						: "";
+				let bgRgbColors: ReturnType<typeof resolveColorToRgb>[] | undefined;
+				let solidBgAnsi = "";
+				if (hasBgGradient) {
+					bgRgbColors = (effectiveSegmentStyle.bgColor as Color[]).map(resolveColorToRgb);
+				} else if (effectiveSegmentStyle.bgColor) {
+					const { r, g, b } = resolveColorToRgb(effectiveSegmentStyle.bgColor as Color);
+					solidBgAnsi = rgbToBgAnsi(r, g, b);
+				}
 
 				const modifiersAnsi = resolveModifiersToAnsi(effectiveSegmentStyle.modifiers);
 

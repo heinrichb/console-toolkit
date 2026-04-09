@@ -3,7 +3,7 @@ import { GRADIENTS } from "./gradients";
 
 describe("Gradient Presets", () => {
 	test("all presets are defined and non-empty", () => {
-		const keys = Object.keys(GRADIENTS);
+		const keys = Object.keys(GRADIENTS) as (keyof typeof GRADIENTS)[];
 		expect(keys.length).toBeGreaterThanOrEqual(6);
 		for (const key of keys) {
 			expect(GRADIENTS[key].length).toBeGreaterThanOrEqual(2);

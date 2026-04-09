@@ -100,7 +100,6 @@ const BORDERS: Record<Exclude<BorderStyle, "none">, BorderChars> = {
  * Builds a horizontal border line (top, middle, or bottom).
  */
 function buildBorderLine(
-	chars: BorderChars,
 	left: string,
 	fill: string,
 	junction: string,
@@ -151,7 +150,7 @@ function buildDataRow(
 export function createTable(options: TableOptions): PrintLine[] {
 	const { headers, rows, style, headerStyle, borderStyle, border = "single", columnWidths, cellPadding = 1 } = options;
 
-	const colCount = Math.max(headers?.length ?? 0, ...rows.map((r) => r.length), 0);
+	const colCount = rows.reduce((max, r) => Math.max(max, r.length), headers?.length ?? 0);
 	if (colCount === 0) return [];
 
 	// Compute column widths from content if not provided
@@ -174,12 +173,12 @@ export function createTable(options: TableOptions): PrintLine[] {
 	const output: PrintLine[] = [];
 
 	// Top border
-	output.push(buildBorderLine(chars, chars.tl, chars.t, chars.tj, chars.tr, colWidths, cellPadding, borderStyle));
+	output.push(buildBorderLine(chars.tl, chars.t, chars.tj, chars.tr, colWidths, cellPadding, borderStyle));
 
 	// Header row
 	if (headers) {
 		output.push(buildDataRow(headers, colWidths, cellPadding, colCount, chars.l, headerStyle ?? style, borderStyle));
-		output.push(buildBorderLine(chars, chars.ml, chars.m, chars.mj, chars.mr, colWidths, cellPadding, borderStyle));
+		output.push(buildBorderLine(chars.ml, chars.m, chars.mj, chars.mr, colWidths, cellPadding, borderStyle));
 	}
 
 	// Data rows
@@ -188,7 +187,7 @@ export function createTable(options: TableOptions): PrintLine[] {
 	}
 
 	// Bottom border
-	output.push(buildBorderLine(chars, chars.bl, chars.b, chars.bj, chars.br, colWidths, cellPadding, borderStyle));
+	output.push(buildBorderLine(chars.bl, chars.b, chars.bj, chars.br, colWidths, cellPadding, borderStyle));
 
 	return output;
 }

@@ -48,8 +48,8 @@
 		"build": "bun run scripts/build.ts",
 		"release": "bun run build && bun publish --tag latest",
 		"typecheck": "bun x tsc --noEmit",
-		"format:check": "prettier --check \"src/**/*.{ts,json,md}\"",
-		"format:write": "prettier --write \"src/**/*.{ts,json,md}\"",
+		"format:check": "prettier --check \"src/**/*.{ts,json,md}\" \"*.md\"",
+		"format:write": "prettier --write \"src/**/*.{ts,json,md}\" \"*.md\"",
 		"lint": "eslint \"src/**/*.ts\"",
 		"tree": "tree -a -I '.git|node_modules|dist'"
 	},
