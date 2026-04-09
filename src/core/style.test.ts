@@ -9,7 +9,6 @@ import {
 	resolveModifiersToAnsi,
 	resolveStyle,
 	mergeStyles,
-	interpolateColor,
 	interpolateGradient,
 	getGradientColor
 } from "./style";
@@ -43,18 +42,6 @@ describe("Color Utilities", () => {
 		expect(resolveColorToRgb("green")).toEqual({ r: 16, g: 185, b: 129 }); // Tailwind value
 	});
 
-	test("interpolateColor returns hex string for hex inputs", () => {
-		expect(interpolateColor("#000000", "#FFFFFF", 0.5)).toBe("#808080");
-	});
-
-	test("interpolateColor handles standard color names", () => {
-		expect(interpolateColor("black", "white", 0.5)).toBe("#808080");
-	});
-
-	test("interpolateColor clamps factors", () => {
-		expect(interpolateColor("black", "white", -1)).toBe("#000000");
-		expect(interpolateColor("black", "white", 2)).toBe("#ffffff");
-	});
 });
 
 describe("Style Resolution", () => {

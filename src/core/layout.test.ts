@@ -52,6 +52,16 @@ describe("Layout Utilities", () => {
 		expect(stdoutSpy).toHaveBeenCalled();
 	});
 
+	test("printColumns passes defaultStyle to separator and padding", () => {
+		const defaultStyle = { color: "red" as const };
+		printColumns([[lineA], [lineB]], { defaultStyle });
+
+		expect(stdoutSpy).toHaveBeenCalled();
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		// Separator and padding segments should have the red color applied
+		expect(output).toContain("38;2;");
+	});
+
 	test("printColumns handles 3 columns", () => {
 		printColumns([[lineA], [lineA], [lineB]]);
 

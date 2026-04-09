@@ -15,6 +15,7 @@ export * from "./core/layout";
 // Export Components
 export * from "./components/progress";
 export * from "./components/spinner";
+export * from "./components/table";
 
 // Export Presets
 export * from "./presets/ascii";

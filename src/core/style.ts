@@ -129,13 +129,6 @@ export function interpolateHex(color1: string, color2: string, factor: number): 
 }
 
 /**
- * Public interpolation function that accepts any Color type.
- */
-export function interpolateColor(color1: Color, color2: Color, factor: number): HexColor {
-	return interpolateHex(colorToHex(color1), colorToHex(color2), factor) as HexColor;
-}
-
-/**
  * Computes the segment index and interpolation factor for a multi-stop gradient.
  * Shared by all gradient functions to avoid duplicating the segment math.
  */

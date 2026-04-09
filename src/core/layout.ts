@@ -59,9 +59,9 @@ export function mergeColumns(
  */
 export function printColumns(
 	columns: PrintLine[][],
-	options: { widths?: number[]; separator?: string; printer?: Printer } = {}
+	options: { widths?: number[]; separator?: string; defaultStyle?: PrintStyle; printer?: Printer } = {}
 ): void {
-	const { widths, separator = "     ", printer = new Printer() } = options;
-	const mergedLines = mergeColumns(columns, separator, undefined, widths);
+	const { widths, separator = "     ", defaultStyle, printer = new Printer() } = options;
+	const mergedLines = mergeColumns(columns, separator, defaultStyle, widths);
 	printer.print(block(mergedLines));
 }
