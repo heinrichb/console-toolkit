@@ -3,6 +3,7 @@ import {
 	colorToHex,
 	hexToRgb,
 	rgbToAnsi,
+	rgbToBgAnsi,
 	resolveColorToAnsi,
 	resolveColorToRgb,
 	resolveModifiersToAnsi,
@@ -192,6 +193,43 @@ describe("interpolateGradient", () => {
 	test("handles standard color names", () => {
 		// "red" is Tailwind Red-500 (#EF4444), factor 0 returns the first color
 		expect(interpolateGradient(["red", "blue"], 0)).toBe("#ef4444");
+	});
+});
+
+describe("Background Color", () => {
+	test("rgbToBgAnsi formats correctly", () => {
+		expect(rgbToBgAnsi(255, 0, 0)).toBe(`${ESC}[48;2;255;0;0m`);
+	});
+
+	test("resolveStyle handles solid bgColor", () => {
+		const style: PrintStyle = { bgColor: "blue" };
+		expect(resolveStyle(style)).toContain("48;2;");
+	});
+
+	test("resolveStyle handles bgColor + color together", () => {
+		const style: PrintStyle = { color: "red", bgColor: "blue" };
+		const result = resolveStyle(style);
+		expect(result).toContain("38;2;"); // foreground
+		expect(result).toContain("48;2;"); // background
+	});
+
+	test("resolveStyle handles bgColor gradient", () => {
+		const style: PrintStyle = { bgColor: ["#000000", "#FFFFFF"] };
+		expect(resolveStyle(style, 0)).toContain("48;2;0;0;0");
+	});
+
+	test("mergeStyles cascades bgColor (child overrides parent)", () => {
+		const p: PrintStyle = { bgColor: "red" };
+		const c: PrintStyle = { bgColor: "blue" };
+		const merged = mergeStyles(p, c);
+		expect(merged.bgColor).toBe("blue");
+	});
+
+	test("mergeStyles inherits parent bgColor if child has none", () => {
+		const p: PrintStyle = { bgColor: "red" };
+		const c: PrintStyle = { color: "green" };
+		const merged = mergeStyles(p, c);
+		expect(merged.bgColor).toBe("red");
 	});
 });
 

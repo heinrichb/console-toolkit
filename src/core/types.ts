@@ -43,6 +43,13 @@ export interface PrintStyle {
 	color?: Color | Color[];
 
 	/**
+	 * The background color to apply.
+	 * - A single color (string) applies a solid background.
+	 * - An array of colors applies a background gradient.
+	 */
+	bgColor?: Color | Color[];
+
+	/**
 	 * A list of style modifiers (e.g., bold, italic) to apply.
 	 */
 	modifiers?: StyleModifier[];

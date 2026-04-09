@@ -18,3 +18,4 @@ export * from "./components/spinner";
 
 // Export Presets
 export * from "./presets/ascii";
+export * from "./presets/gradients";

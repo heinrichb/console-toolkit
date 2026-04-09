@@ -115,6 +115,107 @@ describe("Printer", () => {
 		expect(secondCallOutput.startsWith(expectedClear)).toBe(true);
 	});
 
+	test("renderToString returns rendered output as string", () => {
+		const printer = new Printer();
+		const testBlock = block([line([segment("Hello", { color: "red" })])]);
+
+		stdoutSpy.mockClear();
+		const result = printer.renderToString(testBlock);
+
+		expect(result).toContain(`${ESC}[38;2;239;68;68mHello${ESC}[0m`);
+		expect(stdoutSpy).not.toHaveBeenCalled();
+	});
+
+	test("renderToString does not include clear sequences in live mode", () => {
+		const printer = new Printer({ live: true });
+		printer.print(block([line([segment("1")]), line([segment("2")])]));
+		stdoutSpy.mockClear();
+
+		const result = printer.renderToString(block([line([segment("New")])]));
+
+		expect(result).not.toContain(`${ESC}[1A`);
+		expect(result).not.toContain(`${ESC}[2K`);
+	});
+
+	test("renderToString does not affect linesRendered", () => {
+		const printer = new Printer({ live: true });
+		printer.renderToString(block([line([segment("Ghost")])]));
+
+		// Now print — should NOT clear any lines since renderToString didn't update linesRendered
+		printer.print(block([line([segment("Real")])]));
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output.startsWith(`${ESC}[1A`)).toBe(false);
+	});
+
+	test("renderToString returns empty string when no data", () => {
+		const printer = new Printer();
+		expect(printer.renderToString()).toBe("");
+	});
+
+	test("Printer handles solid bgColor on block", () => {
+		const printer = new Printer();
+		const testBlock = block([line([segment("Hello")])], { bgColor: "blue" });
+		printer.print(testBlock);
+
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("48;2;");
+	});
+
+	test("Printer handles vertical bgColor gradient", () => {
+		const printer = new Printer();
+		const testBlock = block([line([segment("Start")]), line([segment("Middle")]), line([segment("End")])], {
+			bgColor: ["#000000", "#FFFFFF"]
+		});
+		printer.print(testBlock);
+
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("48;2;0;0;0"); // black bg
+		expect(output).toContain("48;2;255;255;255"); // white bg
+	});
+
+	test("Printer handles horizontal bgColor gradient", () => {
+		const printer = new Printer();
+		const testBlock = block([line([segment("AB", { bgColor: ["#FF0000", "#0000FF"] })])]);
+		printer.print(testBlock);
+
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("48;2;255;0;0"); // red bg
+		expect(output).toContain("48;2;0;0;255"); // blue bg
+	});
+
+	test("Printer handles bg gradient + solid fg together", () => {
+		const printer = new Printer();
+		const testBlock = block([line([segment("AB", { color: "red", bgColor: ["#000000", "#FFFFFF"] })])]);
+		printer.print(testBlock);
+
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("38;2;"); // solid fg red
+		expect(output).toContain("48;2;0;0;0"); // bg gradient start
+		expect(output).toContain("48;2;255;255;255"); // bg gradient end
+	});
+
+	test("Printer handles fg gradient + solid bg together", () => {
+		const printer = new Printer();
+		const testBlock = block([line([segment("AB", { color: ["#000000", "#FFFFFF"], bgColor: "blue" })])]);
+		printer.print(testBlock);
+
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("38;2;"); // fg gradient
+		expect(output).toContain("48;2;"); // bg solid
+	});
+
+	test("Printer handles fg gradient + bg gradient together", () => {
+		const printer = new Printer();
+		const testBlock = block([line([segment("AB", { color: ["#000000", "#FFFFFF"], bgColor: ["#FF0000", "#0000FF"] })])]);
+		printer.print(testBlock);
+
+		const output = stdoutSpy.mock.calls[0][0] as string;
+		expect(output).toContain("38;2;0;0;0"); // fg black
+		expect(output).toContain("48;2;255;0;0"); // bg red
+		expect(output).toContain("38;2;255;255;255"); // fg white
+		expect(output).toContain("48;2;0;0;255"); // bg blue
+	});
+
 	test("Printer.clear() manually clears the output", () => {
 		const printer = new Printer({ live: true });
 		printer.print(block([line([segment("Line 1")])]));

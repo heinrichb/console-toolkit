@@ -72,6 +72,13 @@ export function rgbToAnsi(r: number, g: number, b: number): string {
 }
 
 /**
+ * Converts RGB to a 24-bit ANSI background color escape sequence.
+ */
+export function rgbToBgAnsi(r: number, g: number, b: number): string {
+	return `${ESC}[48;2;${r};${g};${b}m`;
+}
+
+/**
  * Converts any Color to an ANSI escape sequence.
  */
 export function resolveColorToAnsi(color: Color): string {
@@ -140,12 +147,12 @@ function gradientSegment(colorCount: number, factor: number): { index: number; f
 }
 
 /**
- * Gets a specific color from a multi-stop gradient array at a specific factor (0-1).
- * Uses pre-resolved RGB colors for performance in per-character hot paths.
+ * Shared gradient-to-ANSI conversion for pre-resolved RGB colors.
+ * Used by both foreground and background gradient hot paths.
  */
-export function getGradientColorFromRgb(colors: RGB[], factor: number): string {
+function getGradientAnsiFromRgb(colors: RGB[], factor: number, toAnsi: (r: number, g: number, b: number) => string): string {
 	if (colors.length === 0) return "";
-	if (colors.length === 1) return rgbToAnsi(colors[0].r, colors[0].g, colors[0].b);
+	if (colors.length === 1) return toAnsi(colors[0].r, colors[0].g, colors[0].b);
 
 	const seg = gradientSegment(colors.length, factor);
 	const c1 = colors[seg.index];
@@ -155,7 +162,23 @@ export function getGradientColorFromRgb(colors: RGB[], factor: number): string {
 	const g = Math.round(c1.g + seg.factor * (c2.g - c1.g));
 	const b = Math.round(c1.b + seg.factor * (c2.b - c1.b));
 
-	return rgbToAnsi(r, g, b);
+	return toAnsi(r, g, b);
+}
+
+/**
+ * Gets a foreground color from a multi-stop gradient as an ANSI escape sequence.
+ * Uses pre-resolved RGB colors for performance in per-character hot paths.
+ */
+export function getGradientColorFromRgb(colors: RGB[], factor: number): string {
+	return getGradientAnsiFromRgb(colors, factor, rgbToAnsi);
+}
+
+/**
+ * Gets a background color from a multi-stop gradient as an ANSI escape sequence.
+ * Uses pre-resolved RGB colors for performance in per-character hot paths.
+ */
+export function getGradientBgColorFromRgb(colors: RGB[], factor: number): string {
+	return getGradientAnsiFromRgb(colors, factor, rgbToBgAnsi);
 }
 
 /**
@@ -202,7 +225,8 @@ export function mergeStyles(parent?: PrintStyle, child?: PrintStyle): PrintStyle
 
 	return {
 		modifiers: mergedModifiers,
-		color: child.color ?? parent.color
+		color: child.color ?? parent.color,
+		bgColor: child.bgColor ?? parent.bgColor
 	};
 }
 
@@ -222,12 +246,20 @@ export function resolveStyle(style?: PrintStyle, gradientFactor = 0): string {
 
 	if (style.color) {
 		if (Array.isArray(style.color)) {
-			// Gradient
-			const hex = getGradientColor(style.color, gradientFactor);
-			ansi += hex;
+			const rgbColors = style.color.map(resolveColorToRgb);
+			ansi += getGradientColorFromRgb(rgbColors, gradientFactor);
 		} else {
-			// Solid
 			ansi += resolveColorToAnsi(style.color);
+		}
+	}
+
+	if (style.bgColor) {
+		if (Array.isArray(style.bgColor)) {
+			const bgRgbColors = style.bgColor.map(resolveColorToRgb);
+			ansi += getGradientBgColorFromRgb(bgRgbColors, gradientFactor);
+		} else {
+			const { r, g, b } = resolveColorToRgb(style.bgColor);
+			ansi += rgbToBgAnsi(r, g, b);
 		}
 	}
 

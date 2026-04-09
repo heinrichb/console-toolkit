@@ -1,5 +1,6 @@
 import { expect, test, describe } from "bun:test";
-import { getLineLength, computeMaxWidth, padLine } from "./utils";
+import { getLineLength, computeMaxWidth, padLine, stripAnsi } from "./utils";
+import { resolveColorToAnsi, RESET } from "./style";
 import { line, segment } from "./builders";
 
 const lineA = line([segment("Hello")]);
@@ -29,5 +30,28 @@ describe("Line Utilities", () => {
 
 		expect(getLineLength(ignored)).toBe(7);
 		expect(ignored.segments.length).toBe(1);
+	});
+});
+
+describe("stripAnsi", () => {
+	test("strips foreground color codes", () => {
+		expect(stripAnsi("\x1b[38;2;255;0;0mHello\x1b[0m")).toBe("Hello");
+	});
+
+	test("strips modifier codes", () => {
+		expect(stripAnsi("\x1b[1m\x1b[3mBold Italic\x1b[0m")).toBe("Bold Italic");
+	});
+
+	test("handles text with no ANSI codes", () => {
+		expect(stripAnsi("plain text")).toBe("plain text");
+	});
+
+	test("handles empty string", () => {
+		expect(stripAnsi("")).toBe("");
+	});
+
+	test("strips multiple color sequences in one string", () => {
+		const styled = `${resolveColorToAnsi("red")}Red${RESET} and ${resolveColorToAnsi("blue")}Blue${RESET}`;
+		expect(stripAnsi(styled)).toBe("Red and Blue");
 	});
 });

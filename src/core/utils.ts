@@ -37,3 +37,21 @@ export function padLine(inputLine: PrintLine, targetWidth: number, padStyle?: Pr
 	}
 	return inputLine;
 }
+
+/**
+ * Regex matching all ANSI SGR (Select Graphic Rendition) escape sequences.
+ * Covers color codes (38;2;R;G;B), modifiers (1m, 2m, etc.), and reset (0m).
+ * Uses RegExp constructor to avoid eslint no-control-regex on the ESC literal.
+ */
+// eslint-disable-next-line no-control-regex
+const ANSI_REGEX = /\x1b\[[0-9;]*m/g;
+
+/**
+ * Strips all ANSI escape sequences from a string, returning plain text.
+ *
+ * @param text - The string potentially containing ANSI codes.
+ * @returns The plain text with all ANSI sequences removed.
+ */
+export function stripAnsi(text: string): string {
+	return text.replace(ANSI_REGEX, "");
+}
