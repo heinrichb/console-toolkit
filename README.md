@@ -266,7 +266,7 @@ printer.print(block(tableLines));
 
 ### Dragon ASCII Art
 
-Vertical gradient dragon art — accepts a single color, two colors, or a full `Color[]` array:
+Vertical gradient dragon art — pass a `Color[]` array for the gradient stops:
 
 ```typescript
 import { getDragon, Printer, block, GRADIENTS } from "@heinrichb/console-toolkit";
@@ -274,8 +274,8 @@ import { getDragon, Printer, block, GRADIENTS } from "@heinrichb/console-toolkit
 const printer = new Printer();
 
 printer.print(block(getDragon())); // Default: red -> amber
-printer.print(block(getDragon("#3B82F6", "#06B6D4"))); // Two-color
-printer.print(block(getDragon(GRADIENTS.fire))); // Multi-stop gradient
+printer.print(block(getDragon(["#3B82F6", "#06B6D4"]))); // Two-color
+printer.print(block(getDragon(GRADIENTS.fire))); // Multi-stop preset
 ```
 
 ---

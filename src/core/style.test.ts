@@ -9,8 +9,7 @@ import {
 	resolveModifiersToAnsi,
 	resolveStyle,
 	mergeStyles,
-	interpolateGradient,
-	getGradientColor
+	interpolateGradient
 } from "./style";
 import { Color, PrintStyle } from "./types";
 
@@ -72,37 +71,6 @@ describe("Style Resolution", () => {
 	test("resolveStyle handles gradient with explicit factor", () => {
 		const style: PrintStyle = { color: ["#000000", "#FFFFFF"] };
 		expect(resolveStyle(style, 1)).toBe(`${ESC}[38;2;255;255;255m`); // Factor 1 is white
-	});
-});
-
-describe("Gradient Utilities", () => {
-	test("getGradientColor handles 2 colors", () => {
-		const colors: Color[] = ["#000000", "#FFFFFF"];
-		// 0 -> black
-		// 0.5 -> middle color (gray)
-		// 1 -> white
-		expect(getGradientColor(colors, 0)).toBe(`${ESC}[38;2;0;0;0m`);
-		expect(getGradientColor(colors, 0.5)).toBe(`${ESC}[38;2;128;128;128m`);
-		expect(getGradientColor(colors, 1)).toBe(`${ESC}[38;2;255;255;255m`);
-	});
-
-	test("getGradientColor handles 3 colors", () => {
-		const colors: Color[] = ["#000000", "#808080", "#FFFFFF"];
-		// 0 -> black
-		// 0.5 -> middle color (gray)
-		// 1 -> white
-		// 0.25 -> between black and gray
-		expect(getGradientColor(colors, 0)).toBe(`${ESC}[38;2;0;0;0m`);
-		expect(getGradientColor(colors, 0.5)).toBe(`${ESC}[38;2;128;128;128m`);
-		expect(getGradientColor(colors, 1)).toBe(`${ESC}[38;2;255;255;255m`);
-	});
-
-	test("getGradientColor handles empty colors array", () => {
-		expect(getGradientColor([], 0)).toBe("");
-	});
-
-	test("getGradientColor handles single color array", () => {
-		expect(getGradientColor(["#FF0000"], 0.5)).toBe(`${ESC}[38;2;255;0;0m`);
 	});
 });
 

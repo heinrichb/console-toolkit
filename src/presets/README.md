@@ -8,24 +8,16 @@ Pre-built assets you can drop directly into your application — ASCII art with 
 
 ### The Dragon (`getDragon`)
 
-A majestic dragon rendered as `PrintLine[]` with a vertical color gradient. The function accepts three calling styles:
-
-```typescript
-getDragon(); // Default: red -> amber
-getDragon(startColor, endColor); // Two-color gradient
-getDragon(colorArray); // Multi-stop gradient (Color[])
-```
+A majestic dragon rendered as `PrintLine[]` with a vertical color gradient.
 
 **Signature:**
 
 ```typescript
-function getDragon(colorsOrStart?: Color | Color[], endColor?: Color): PrintLine[];
+function getDragon(colors?: Color[]): PrintLine[];
 ```
 
-- When called with no arguments, defaults to red (`#EF4444`) to amber (`#F59E0B`).
-- When called with a single `Color`, pairs it with amber as the end color.
-- When called with a `Color[]`, uses the full array as multi-stop gradient stops.
-- When called with two `Color` arguments, uses them as start and end.
+- When called with no arguments, defaults to red-to-amber `["#EF4444", "#F59E0B"]`.
+- Pass any `Color[]` array for custom multi-stop gradients.
 
 ### Examples
 
@@ -38,12 +30,12 @@ const printer = new Printer();
 printer.print(block(getDragon()));
 
 // Two-color ice dragon
-printer.print(block(getDragon("#3B82F6", "#06B6D4")));
+printer.print(block(getDragon(["#3B82F6", "#06B6D4"])));
 
 // Multi-stop fire dragon using a gradient preset
 printer.print(block(getDragon(GRADIENTS.fire)));
 
-// Multi-stop custom gradient
+// Custom 3-stop gradient
 printer.print(block(getDragon(["#FF0000", "#00FF00", "#0000FF"])));
 ```
 

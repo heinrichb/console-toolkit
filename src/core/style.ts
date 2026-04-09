@@ -185,16 +185,6 @@ export function interpolateGradient(colors: Color[], factor: number): HexColor {
 	return interpolateHex(colorToHex(colors[seg.index]), colorToHex(colors[seg.index + 1]), seg.factor) as HexColor;
 }
 
-/**
- * Gets a specific color from a multi-stop gradient array at a specific factor (0-1).
- * Returns an ANSI escape sequence for the interpolated color.
- */
-export function getGradientColor(colors: Color[], factor: number): string {
-	if (colors.length === 0) return "";
-	const rgbColors = colors.map(resolveColorToRgb);
-	return getGradientColorFromRgb(rgbColors, factor);
-}
-
 // -----------------
 // Style Merging
 // -----------------
