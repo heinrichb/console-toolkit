@@ -1,12 +1,15 @@
 import { expect, test, describe } from "bun:test";
 import {
+	colorToHex,
 	hexToRgb,
 	rgbToAnsi,
 	resolveColorToAnsi,
+	resolveColorToRgb,
 	resolveModifiersToAnsi,
 	resolveStyle,
 	mergeStyles,
 	interpolateColor,
+	interpolateGradient,
 	getGradientColor
 } from "./style";
 import { Color, PrintStyle } from "./types";
@@ -32,6 +35,11 @@ describe("Color Utilities", () => {
 	test("resolveColorToAnsi converts hex and standard colors", () => {
 		expect(resolveColorToAnsi("#000000")).toBe(`${ESC}[38;2;0;0;0m`);
 		expect(resolveColorToAnsi("red")).toBe(`${ESC}[38;2;239;68;68m`); // Updated to Tailwind value
+	});
+
+	test("resolveColorToRgb converts color to RGB object", () => {
+		expect(resolveColorToRgb("#FF0000")).toEqual({ r: 255, g: 0, b: 0 });
+		expect(resolveColorToRgb("green")).toEqual({ r: 16, g: 185, b: 129 }); // Tailwind value
 	});
 
 	test("interpolateColor returns hex string for hex inputs", () => {
@@ -101,6 +109,14 @@ describe("Gradient Utilities", () => {
 		expect(getGradientColor(colors, 0.5)).toBe(`${ESC}[38;2;128;128;128m`);
 		expect(getGradientColor(colors, 1)).toBe(`${ESC}[38;2;255;255;255m`);
 	});
+
+	test("getGradientColor handles empty colors array", () => {
+		expect(getGradientColor([], 0)).toBe("");
+	});
+
+	test("getGradientColor handles single color array", () => {
+		expect(getGradientColor(["#FF0000"], 0.5)).toBe(`${ESC}[38;2;255;0;0m`);
+	});
 });
 
 describe("Style Merging", () => {
@@ -131,5 +147,67 @@ describe("Style Merging", () => {
 		expect(mergeStyles(p, undefined)).toEqual(p);
 		expect(mergeStyles(undefined, p)).toEqual(p);
 		expect(mergeStyles(undefined, undefined)).toEqual({});
+	});
+});
+
+describe("interpolateGradient", () => {
+	test("returns fallback white for empty array", () => {
+		expect(interpolateGradient([], 0.5)).toBe("#FFFFFF");
+	});
+
+	test("returns the single color as hex for single-element array", () => {
+		expect(interpolateGradient(["#FF0000"], 0.5)).toBe("#FF0000");
+	});
+
+	test("returns the single standard color converted to hex", () => {
+		expect(interpolateGradient(["red"], 0.5)).toBe("#EF4444");
+	});
+
+	test("interpolates two colors at factor 0", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], 0)).toBe("#000000");
+	});
+
+	test("interpolates two colors at factor 0.5", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], 0.5)).toBe("#808080");
+	});
+
+	test("interpolates two colors at factor 1", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], 1)).toBe("#ffffff");
+	});
+
+	test("handles multi-stop gradient (3 colors)", () => {
+		const result = interpolateGradient(["#000000", "#808080", "#FFFFFF"], 0.25);
+		// 0.25 is halfway through the first segment (black to gray)
+		expect(result).toBe("#404040");
+	});
+
+	test("clamps negative factor to 0", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], -1)).toBe("#000000");
+	});
+
+	test("clamps factor > 1 to 1", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], 2)).toBe("#ffffff");
+	});
+
+	test("handles standard color names", () => {
+		// "red" is Tailwind Red-500 (#EF4444), factor 0 returns the first color
+		expect(interpolateGradient(["red", "blue"], 0)).toBe("#ef4444");
+	});
+});
+
+describe("Style Security", () => {
+	test("colorToHex should not crash with 'constructor'", () => {
+		// Verify prevention of prototype pollution crashes (DoS).
+		// colorToHex uses dictionary lookups that must safely handle "constructor".
+		const dangerousInput = "constructor";
+		const result = colorToHex(dangerousInput as unknown as Color);
+		// Should return fallback white (#FFFFFF), not crash or return a function.
+		expect(result).toBe("#FFFFFF");
+	});
+
+	test("resolveColorToAnsi should not crash with 'constructor'", () => {
+		const dangerousInput = "constructor";
+		// Verify full resolution pipeline is safe against property masking.
+		expect(() => resolveColorToAnsi(dangerousInput as unknown as Color)).not.toThrow();
 	});
 });

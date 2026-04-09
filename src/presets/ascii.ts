@@ -1,5 +1,5 @@
 import { PrintLine, Color } from "../core/types";
-import { interpolateColor } from "../core/style";
+import { interpolateGradient } from "../core/style";
 import { line, segment } from "../core/builders";
 
 // -----------------
@@ -30,11 +30,10 @@ export function getDragon(startColor: Color = "#EF4444", endColor: Color = "#F59
 		"                                                          /.-'"
 	];
 
-	// Note: We could use PrintBlock's vertical gradient feature instead of manual interpolation here.
-	// But to keep logic similar and return lines directly, we manual interp.
+	const colors: Color[] = [startColor, endColor];
 	return rawDragon.map((text, i) => {
 		const factor = rawDragon.length <= 1 ? 0 : i / (rawDragon.length - 1);
-		const colorStyle = interpolateColor(startColor, endColor, factor);
-		return line([segment(text, { color: colorStyle })]);
+		const color = interpolateGradient(colors, factor);
+		return line([segment(text, { color })]);
 	});
 }

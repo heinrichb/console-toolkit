@@ -6,8 +6,37 @@
 	"main": "./dist/index.js",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		}
+	},
 	"publishConfig": {
 		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/heinrichb/console-toolkit.git"
+	},
+	"homepage": "https://github.com/heinrichb/console-toolkit#readme",
+	"bugs": {
+		"url": "https://github.com/heinrichb/console-toolkit/issues"
+	},
+	"keywords": [
+		"console",
+		"terminal",
+		"cli",
+		"ansi",
+		"colors",
+		"gradient",
+		"progress-bar",
+		"spinner",
+		"typescript"
+	],
+	"engines": {
+		"node": ">=18",
+		"bun": ">=1.0"
 	},
 	"files": [
 		"dist"
@@ -17,7 +46,7 @@
 		"test": "bun test src",
 		"test:coverage": "bun test src --coverage --coverage-threshold=100",
 		"build": "bun run scripts/build.ts",
-		"publish": "bun run build && bun publish --tag latest",
+		"release": "bun run build && bun publish --tag latest",
 		"typecheck": "bun x tsc --noEmit",
 		"format:check": "prettier --check \"src/**/*.{ts,json,md}\"",
 		"format:write": "prettier --write \"src/**/*.{ts,json,md}\"",
@@ -39,6 +68,7 @@
 		"eslint": "^10.0.2",
 		"eslint-config-prettier": "^10.1.8",
 		"globals": "^17.3.0",
+		"jiti": "^2.6.1",
 		"prettier": "^3.8.1",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.56.1"

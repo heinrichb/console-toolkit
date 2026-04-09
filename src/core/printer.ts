@@ -1,7 +1,14 @@
 import { Color, PrintBlock, PrinterOptions, PrintLine, PrintStyle } from "./types";
-import { getGradientColor, mergeStyles, resolveStyle, RESET, interpolateColor, resolveModifiersToAnsi } from "./style";
-
-const ESC = "\x1b";
+import {
+	ESC,
+	getGradientColorFromRgb,
+	resolveColorToRgb,
+	mergeStyles,
+	resolveStyle,
+	RESET,
+	interpolateGradient,
+	resolveModifiersToAnsi
+} from "./style";
 
 /**
  * Handles rendering PrintBlocks to the terminal with support for interactive/live overwriting.
@@ -67,26 +74,10 @@ export class Printer {
 	 */
 	private resolveBlockColorForLine(blockStyle: PrintStyle, lineIndex: number, totalLines: number): Color | undefined {
 		if (!blockStyle.color) return undefined;
-
 		if (Array.isArray(blockStyle.color)) {
-			// Vertical Gradient
-			if (totalLines <= 1) return blockStyle.color[0]; // Single line, use first color
-
-			const colors = blockStyle.color;
-			const factor = lineIndex / (totalLines - 1);
-
-			// Interpolate manually to obtain Hex Color
-			const f = Math.max(0, Math.min(1, factor));
-			const segmentLength = 1 / (colors.length - 1);
-			const segmentIndex = Math.min(Math.floor(f / segmentLength), colors.length - 2);
-			const segmentFactor = (f - segmentIndex * segmentLength) / segmentLength;
-
-			const c1 = colors[segmentIndex];
-			const c2 = colors[segmentIndex + 1];
-
-			return interpolateColor(c1, c2, segmentFactor);
+			if (totalLines <= 1) return blockStyle.color[0];
+			return interpolateGradient(blockStyle.color, lineIndex / (totalLines - 1));
 		}
-
 		return blockStyle.color;
 	}
 
@@ -125,6 +116,9 @@ export class Printer {
 				// Otherwise it's the segment's own gradient (Local)
 				const isGlobalGradient = effectiveSegmentStyle.color === effectiveLineStyle.color;
 
+				// Avoid re-parsing hex strings on every character in the gradient loop below
+				const rgbColors = colors.map(resolveColorToRgb);
+
 				// Iterate characters to apply gradient
 				const modifiersAnsi = resolveModifiersToAnsi(effectiveSegmentStyle.modifiers);
 
@@ -136,7 +130,7 @@ export class Printer {
 						factor = i / (text.length - 1);
 					}
 
-					const colorAnsi = getGradientColor(colors, factor); // Returns ANSI Color Code
+					const colorAnsi = getGradientColorFromRgb(rgbColors, factor);
 					lineOutput += `${modifiersAnsi}${colorAnsi}${text[i]}`;
 				}
 				lineOutput += RESET;

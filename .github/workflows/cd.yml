@@ -41,14 +41,14 @@ jobs:
 
                   # 2. Check for Manual Version Change in last commit
                   MANUAL_BUMP=false
-                  # Check if package.json was modified
-                  if git diff HEAD^ HEAD --name-only | grep -q "package.json"; then
-                    # Check if version field specifically was changed
-                    # -U0 removes context lines
-                    # grep "^\+" looks for added lines starting with +
-                    if git diff HEAD^ HEAD -U0 -- package.json | grep "^\+" | grep -q "\"version\":"; then
-                        echo "Manual version bump detected."
-                        MANUAL_BUMP=true
+                  if git rev-parse HEAD^ >/dev/null 2>&1; then
+                    # Check if package.json was modified
+                    if git diff HEAD^ HEAD --name-only | grep -q "package.json"; then
+                      # Check if version field specifically was changed
+                      if git diff HEAD^ HEAD -U0 -- package.json | grep "^\+" | grep -q "\"version\":"; then
+                          echo "Manual version bump detected."
+                          MANUAL_BUMP=true
+                      fi
                     fi
                   fi
 
@@ -110,19 +110,15 @@ jobs:
             - name: Sync Develop Branch
               if: github.ref == 'refs/heads/main' && success()
               run: |
+                  # Per versioning policy: develop is force-updated to match main after each release,
+                  # ensuring develop always starts fresh from the latest stable state.
                   echo "Syncing develop branch with main..."
                   git fetch origin develop || echo "Remote develop branch not found or accessible."
                   git push origin main:develop --force
               continue-on-error: true # Don't fail the build if this optional sync fails
 
             - name: Set NPM Tag
-              id: set_tag
-              run: |
-                  if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-                    echo "NPM_TAG=beta" >> $GITHUB_ENV
-                  else
-                    echo "NPM_TAG=latest" >> $GITHUB_ENV
-                  fi
+              run: echo "NPM_TAG=latest" >> $GITHUB_ENV
 
             - name: Publish
               run: bun publish --tag ${{ env.NPM_TAG }}

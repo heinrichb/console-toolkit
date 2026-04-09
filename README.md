@@ -7,9 +7,9 @@
 ## 🚀 Features
 
 - **🌈 Rich Styling:** Support for standard ANSI colors, true-color Hex codes, and text modifiers (bold, dim, italic, etc.).
-- **✨ Gradients:** Easy-to-use linear gradients for text and backgrounds.
+- **✨ Gradients:** Easy-to-use linear gradients — horizontal (per-character) and vertical (per-line).
 - **live-updating:** Built-in support for live-updating displays (perfect for spinners and progress bars).
-- **📐 Flexible Layouts:** powerful grid system for multi-column layouts with automatic padding and alignment.
+- **📐 Flexible Layouts:** Powerful grid system for multi-column layouts with automatic padding and alignment.
 - **🧩 Components:** Pre-built, customizable components like **Progress Bars** and **Spinners**.
 - **🐉 Presets:** Fun ASCII art presets (like dragons!) to spice up your output.
 - **TypeScript First:** Fully typed for a great developer experience.
@@ -30,23 +30,31 @@ npm install @heinrichb/console-toolkit
 
 ## ⚡ Quick Start
 
-Get up and running in seconds:
+Get up and running in seconds using the builder functions:
 
 ```typescript
-import { Printer } from "@heinrichb/console-toolkit";
+import { Printer, segment, line, block } from "@heinrichb/console-toolkit";
 
 const printer = new Printer();
 
-printer.print({
-	lines: [
-		{
-			segments: [
-				{ text: "Hello, ", style: { color: "blue", modifiers: ["bold"] } },
-				{ text: "World!", style: { color: "#10B981", modifiers: ["italic"] } } // Hex color support!
-			]
-		}
-	]
-});
+printer.print(
+	block([
+		line([
+			segment("Hello, ", { color: "blue", modifiers: ["bold"] }),
+			segment("World!", { color: "#10B981", modifiers: ["italic"] })
+		])
+	])
+);
+```
+
+---
+
+## 🎮 Try the Demo
+
+See all features in action:
+
+```bash
+bun run demo
 ```
 
 ---
@@ -77,26 +85,36 @@ const gradientStyle: PrintStyle = {
 };
 ```
 
+### Gradient Interpolation
+
+Use `interpolateGradient` for custom multi-stop color calculations:
+
+```typescript
+import { interpolateGradient } from "@heinrichb/console-toolkit";
+
+// Get the color at 50% through a 3-stop gradient
+const color = interpolateGradient(["#EF4444", "#F59E0B", "#10B981"], 0.5);
+// Returns "#F59E0B" (the middle color)
+```
+
 ---
 
 ## 📐 Layouts
 
-Creating multi-column layouts is a breeze.
+Creating multi-column layouts is a breeze using builder functions.
 
 ```typescript
-import { printColumns } from "@heinrichb/console-toolkit";
+import { printColumns, line, segment } from "@heinrichb/console-toolkit";
 
 printColumns(
 	[
 		[
-			// Column 1
-			{ segments: [{ text: "Item 1" }] },
-			{ segments: [{ text: "Item 2" }] }
+			line([segment("Item 1")]),
+			line([segment("Item 2")])
 		],
 		[
-			// Column 2
-			{ segments: [{ text: "Description 1", style: { color: "gray" } }] },
-			{ segments: [{ text: "Description 2", style: { color: "gray" } }] }
+			line([segment("Description 1", { color: "gray" })]),
+			line([segment("Description 2", { color: "gray" })])
 		]
 	],
 	{ separator: " | " }
@@ -112,7 +130,7 @@ printColumns(
 Create customizable progress bars with ease.
 
 ```typescript
-import { createProgressBar, Printer } from "@heinrichb/console-toolkit";
+import { createProgressBar, Printer, block } from "@heinrichb/console-toolkit";
 
 const printer = new Printer({ live: true });
 const bar = createProgressBar({
@@ -122,7 +140,7 @@ const bar = createProgressBar({
 	emptyStyle: { color: "gray" }
 });
 
-printer.print({ lines: [bar] });
+printer.print(block([bar]));
 ```
 
 ### Spinners
@@ -130,19 +148,17 @@ printer.print({ lines: [bar] });
 Add activity indicators to your long-running tasks.
 
 ```typescript
-import { Spinner, SPINNERS, Printer } from "@heinrichb/console-toolkit";
+import { Spinner, SPINNERS, Printer, line, segment, block } from "@heinrichb/console-toolkit";
 
 const spinner = new Spinner({ frames: SPINNERS.dots });
 const printer = new Printer({ live: true });
 
 // In your loop:
-printer.print({
-	lines: [
-		{
-			segments: [{ text: spinner.getFrame(), style: { color: "cyan" } }]
-		}
-	]
-});
+printer.print(
+	block([
+		line([segment(spinner.getFrame(), { color: "cyan" })])
+	])
+);
 ```
 
 ---
@@ -151,9 +167,9 @@ printer.print({
 
 For more in-depth information on specific parts of the library, check out the detailed guides below:
 
-- **[Core Engine & Styling](src/core/README.md):** Deep dive into `Printer`, `PrintBlock`, `PrintStyle`, and advanced layout techniques.
-- **[Components](src/components/README.md):** Full API reference for `ProgressBar`, `Spinner`, and how to build your own components.
-- **[Presets](src/presets/README.md):** Explore available ASCII art and other presets.
+- **[Core Engine & Styling](https://github.com/heinrichb/console-toolkit/blob/main/src/core/README.md):** Deep dive into `Printer`, `PrintBlock`, `PrintStyle`, and advanced layout techniques.
+- **[Components](https://github.com/heinrichb/console-toolkit/blob/main/src/components/README.md):** Full API reference for `ProgressBar`, `Spinner`, and how to build your own components.
+- **[Presets](https://github.com/heinrichb/console-toolkit/blob/main/src/presets/README.md):** Explore available ASCII art and other presets.
 
 ---
 

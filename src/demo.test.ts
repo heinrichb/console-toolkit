@@ -22,12 +22,18 @@ describe("Demo Script", () => {
 		global.setTimeout = originalTimeout;
 	});
 
-	test("runDemo executes correctly", async () => {
-		// Just await the function call; we expect it not to throw.
+	test("runDemo executes all sections without errors", async () => {
 		await runDemo();
 
 		expect(clearSpy).toHaveBeenCalled();
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Static Dual Column Demo"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Basic Styling"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Builder Functions"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Horizontal Gradients"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Vertical Gradients"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Multi-Column Layouts"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Live Progress Bar Demo"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Spinners Demo"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("ASCII Presets"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Demo Complete!"));
 		expect(stdoutSpy).toHaveBeenCalled();
 	});

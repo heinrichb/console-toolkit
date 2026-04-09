@@ -53,6 +53,7 @@ Before submitting *any* changes:
     ```bash
     bun run format:write
     bun run lint
+    bun run typecheck
     bun run build
     bun run test:coverage
     ```

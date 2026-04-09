@@ -11,17 +11,17 @@ Sometimes you just need something cool without writing it from scratch. This dir
 A majestic dragon, perfect for banners or error screens. You can customize the color gradient that runs vertically across the art.
 
 ```typescript
-import { getDragon, Printer } from "@heinrichb/console-toolkit";
+import { getDragon, Printer, block } from "@heinrichb/console-toolkit";
 
 const printer = new Printer();
 
 // Default Dragon (Red -> Yellow)
 const dragon = getDragon();
-printer.print({ lines: dragon });
+printer.print(block(dragon));
 
 // Custom Colors (Blue -> Cyan)
 const iceDragon = getDragon("#3B82F6", "#06B6D4");
-printer.print({ lines: iceDragon });
+printer.print(block(iceDragon));
 ```
 
 ---

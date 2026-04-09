@@ -19,7 +19,7 @@ export function getLineLength(line: PrintLine): number {
  * @returns The maximum line length found.
  */
 export function computeMaxWidth(lines: PrintLine[]): number {
-	return lines.length > 0 ? Math.max(...lines.map(getLineLength)) : 0;
+	return lines.reduce((max, l) => Math.max(max, getLineLength(l)), 0);
 }
 
 /**
