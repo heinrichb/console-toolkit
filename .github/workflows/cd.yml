@@ -121,6 +121,6 @@ jobs:
               run: echo "NPM_TAG=latest" >> $GITHUB_ENV
 
             - name: Publish
-              run: bun publish --tag ${{ env.NPM_TAG }}
-              env:
-                  NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+              run: |
+                  echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+                  bun publish --tag ${{ env.NPM_TAG }}
