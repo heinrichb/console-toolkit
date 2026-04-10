@@ -22,30 +22,38 @@ import pkg from "../package.json";
  *
  * Each section below is a self-contained example you can copy-paste
  * into your own project as a starting point.
+ *
+ * Static output comes first so you see everything immediately.
+ * Animated demos (progress bar + spinners) run at the end — Ctrl+C anytime.
  */
 export async function runDemo() {
 	console.clear();
 	const printer = new Printer();
+	const dim: PrintStyle = { color: "#9CA3AF" };
 
 	// ─── 1. Colors & Modifiers ──────────────────────────────────────────────────
-	// Every style combination available — pick your favorites.
 
 	console.log("--- Colors & Modifiers ---\n");
 
 	const styles: { name: string; style?: PrintStyle }[] = [
+		// Modifiers
 		{ name: "Bold", style: { modifiers: ["bold"] } },
 		{ name: "Dim", style: { modifiers: ["dim"] } },
 		{ name: "Italic", style: { modifiers: ["italic"] } },
 		{ name: "Underline", style: { modifiers: ["underline"] } },
 		{ name: "Strikethrough", style: { modifiers: ["strikethrough"] } },
 		{ name: "Inverse", style: { modifiers: ["inverse"] } },
+		// Colors in rainbow order
 		{ name: "Red", style: { color: "red" } },
+		{ name: "Yellow", style: { color: "yellow" } },
 		{ name: "Green", style: { color: "green" } },
-		{ name: "Blue", style: { color: "blue" } },
 		{ name: "Cyan", style: { color: "cyan" } },
+		{ name: "Blue", style: { color: "blue" } },
 		{ name: "Magenta", style: { color: "magenta" } },
-		{ name: "Hex #FF6B35", style: { color: "#FF6B35" } },
-		{ name: "Bold + Red", style: { modifiers: ["bold"], color: "red" } },
+		// Hex — pick something visibly unique
+		{ name: "Hex #FFD700", style: { color: "#FFD700" } },
+		// Combinations
+		{ name: "Bold + Underline", style: { modifiers: ["bold", "underline"], color: "cyan" } },
 		{ name: "BG Color", style: { color: "white", bgColor: "#3B82F6" } },
 		{ name: "BG + Bold", style: { color: "white", bgColor: "#7C3AED", modifiers: ["bold"] } }
 	];
@@ -55,85 +63,139 @@ export async function runDemo() {
 	console.log("");
 
 	// ─── 2. Gradients ───────────────────────────────────────────────────────────
-	// Horizontal gradients apply per-character across a line or segment.
-	// Vertical gradients cascade down through a block's lines.
 
 	console.log("--- Gradients ---\n");
 
-	// Horizontal — line-level gradient spans all segments
 	printer.print(
 		block([
-			line([segment("  Horizontal: Rainbow across the entire line  ")], { color: GRADIENTS.rainbow }),
-			line([segment("  Horizontal: "), segment("only this segment is gradient", { color: GRADIENTS.sunset })]),
-			line()
+			line([segment("  Horizontal rainbow across the line  ")], { color: GRADIENTS.rainbow }),
+			line([segment("  Partial: "), segment("only this segment", { color: GRADIENTS.sunset })]),
+			line([segment("  "), segment(" Background gradient ", { color: "white", bgColor: ["#7C3AED", "#3B82F6", "#06B6D4"] })])
 		])
 	);
+	console.log("");
 
-	// Vertical — block-level gradient colors each line differently
-	const verticalLines: PrintLine[] = Array.from({ length: 6 }, (_, i) =>
+	const verticalLines: PrintLine[] = Array.from({ length: 5 }, (_, i) =>
 		line([segment(`  Vertical gradient — line ${i + 1}  `)])
 	);
 	printer.print(block(verticalLines, { color: GRADIENTS.fire }));
-
-	// Background gradient
-	printer.print(block([line(), line([segment("  Background gradient  ", { color: "white", bgColor: GRADIENTS.ocean })])]));
-	console.log("\n");
+	console.log("");
 
 	// ─── 3. Multi-Column Layouts ────────────────────────────────────────────────
-	// Columns auto-pad to the widest content. Great for key-value displays.
 
 	console.log("--- Multi-Column Layouts ---\n");
 
 	const labelStyle: PrintStyle = { color: "#A78BFA" };
-	const valueStyles: PrintStyle[] = [{ color: "#60A5FA" }, { color: "#34D399" }, { color: "#FBBF24" }];
-
 	const labels: PrintLine[] = [
 		line([segment("Package:", labelStyle)]),
 		line([segment("Version:", labelStyle)]),
 		line([segment("Status:", labelStyle)])
 	];
 	const values: PrintLine[] = [
-		line([segment(pkg.name, valueStyles[0])]),
-		line([segment(pkg.version, valueStyles[1])]),
-		line([segment("All systems operational", valueStyles[2])])
+		line([segment(pkg.name, { color: "#60A5FA" })]),
+		line([segment(pkg.version, { color: "#34D399" })]),
+		line([segment("All systems operational", { color: "#FBBF24" })])
 	];
-
 	printColumns([labels, values], { separator: "  =>  ", printer });
-	console.log("\n");
+	console.log("");
 
 	// ─── 4. Tables ──────────────────────────────────────────────────────────────
-	// Styled tables with automatic column sizing and multiple border styles.
 
 	console.log("--- Tables ---\n");
 
-	const tableLines = createTable({
-		headers: ["Feature", "Status", "Since"],
-		rows: [
-			["Colors & Hex", "Stable", "v1.0"],
-			["Gradients", "Stable", "v1.0"],
-			["Background Colors", "New", "v1.1"],
-			["Tables", "New", "v1.1"],
-			["Gradient Presets", "New", "v1.1"]
-		],
-		headerStyle: { color: "cyan", modifiers: ["bold"] },
-		style: { color: "white" },
-		borderStyle: { color: "#6B7280" },
-		border: "rounded"
-	});
-	printer.print(block(tableLines));
+	// Feature table with colorful styling
+	printer.print(
+		block(
+			createTable({
+				headers: ["Feature", "Status", "Since"],
+				rows: [
+					["Colors & Hex", "Stable", "v1.0"],
+					["Gradients", "Stable", "v1.0"],
+					["Background Colors", "New", "v1.1"],
+					["Tables", "New", "v1.1"]
+				],
+				headerStyle: { color: "#FBBF24", modifiers: ["bold"] },
+				style: { color: "#A78BFA" },
+				borderStyle: { color: "#7C3AED" },
+				border: "rounded"
+			})
+		)
+	);
 	console.log("");
 
-	// ─── 5. Progress Bars ───────────────────────────────────────────────────────
-	// Animated progress bar with color that shifts as it fills.
+	// Show all 4 border styles side-by-side
+	const borderStyles = ["single", "double", "rounded", "none"] as const;
+	const borderColumns = borderStyles.map((bs) =>
+		createTable({
+			headers: [bs],
+			rows: [["Row 1"], ["Row 2"]],
+			headerStyle: { color: "#06B6D4", modifiers: ["bold"] },
+			style: { color: "#9CA3AF" },
+			borderStyle: { color: "#6B7280" },
+			border: bs
+		})
+	);
+	printColumns(borderColumns, { separator: "  ", printer });
+	console.log("");
 
-	console.log("--- Progress Bar ---\n");
+	// ─── 5. Gradient Presets ────────────────────────────────────────────────────
+	// Ready-made color arrays — plug into any color or bgColor property.
+
+	console.log("--- Gradient Presets ---\n");
+
+	const presetNames = Object.keys(GRADIENTS) as (keyof typeof GRADIENTS)[];
+	const presetLines: PrintLine[] = presetNames.map((name) =>
+		line([segment(`  ${name.padEnd(12)}`, dim), segment("████████████████████████████████", { color: GRADIENTS[name] })])
+	);
+	printer.print(block(presetLines));
+	console.log("");
+
+	// ─── 5. ASCII Presets ───────────────────────────────────────────────────────
+
+	console.log("--- ASCII Presets ---\n");
+
+	const defaultDragon = getDragon();
+	const rainbowDragon = getDragon(GRADIENTS.rainbow);
+	printColumns([defaultDragon, rainbowDragon], { separator: "   ", printer });
+	console.log("");
+
+	// ─── 6. Render to String ────────────────────────────────────────────────────
+
+	console.log("--- Render to String ---\n");
+
+	const capture = new Printer();
+	const rendered = capture.renderToString(block([line([segment("Hello!", { color: "green", modifiers: ["bold"] })])]));
+	const plain = stripAnsi(rendered).trim();
+
+	printer.print(
+		block([
+			line([segment("Raw string:  ", dim), segment(`${rendered.length} chars (includes ANSI codes)`, { color: "yellow" })]),
+			line([segment("Plain text:  ", dim), segment(`${plain.length} chars`, { color: "green" }), segment(` → "${plain}"`, dim)])
+		])
+	);
+	console.log("");
+
+	// ─── 7. Live Demo ───────────────────────────────────────────────────────────
+	// Animated progress bar + spinners running simultaneously.
+	// Everything above was static — Ctrl+C anytime from here.
+
+	console.log("--- Live Demo ---\n");
 
 	const livePrinter = new Printer({ live: true });
+	const bracketStyle: PrintStyle = { color: "#6B7280" };
 
-	for (let i = 0; i <= 100; i += 2) {
-		const factor = i / 100;
+	const demoSpinners = (Object.keys(SPINNERS) as (keyof typeof SPINNERS)[]).map((type) => ({
+		name: type.charAt(0).toUpperCase() + type.slice(1),
+		instance: new Spinner({ frames: SPINNERS[type], interval: 80 })
+	}));
+
+	const start = Date.now();
+	const duration = 3000;
+
+	while (Date.now() - start < duration) {
+		const elapsed = Date.now() - start;
+		const factor = Math.min(elapsed / duration, 1);
 		const colorHex = interpolateGradient(["#3B82F6", "#06B6D4", "#10B981"], factor);
-		const colorStyle: PrintStyle = { color: colorHex };
 
 		const bar = createProgressBar({
 			progress: factor,
@@ -142,70 +204,22 @@ export async function runDemo() {
 			endChar: "▏",
 			fillStyle: { color: ["#3B82F6", "#EC4899"] },
 			emptyStyle: { color: "#4B5563" },
-			startStyle: colorStyle,
-			endStyle: colorStyle,
+			startStyle: bracketStyle,
+			endStyle: bracketStyle,
 			percentageStyle: { modifiers: ["bold"], color: colorHex }
 		});
 
-		livePrinter.print(block([bar]));
-		await new Promise((resolve) => setTimeout(resolve, 25));
-	}
-	console.log("\n");
-
-	// ─── 6. Spinners ────────────────────────────────────────────────────────────
-	// Five built-in spinner presets. Cycle through them all.
-
-	console.log("--- Spinners ---\n");
-
-	const spinnerTypes = Object.keys(SPINNERS) as (keyof typeof SPINNERS)[];
-	const spinners = spinnerTypes.map((type) => ({
-		type,
-		instance: new Spinner({ frames: SPINNERS[type], interval: 80 })
-	}));
-
-	const spinnerPrinter = new Printer({ live: true });
-	const spinnerStart = Date.now();
-
-	while (Date.now() - spinnerStart < 2000) {
-		const spinnerLines: PrintLine[] = spinners.map((s) =>
-			line([
-				segment(`${s.type.charAt(0).toUpperCase() + s.type.slice(1)}:`.padEnd(10), { color: "#9CA3AF" }),
-				segment(s.instance.getFrame(), { color: "cyan" })
+		const spinnerLine = line(
+			demoSpinners.flatMap((s) => [
+				segment(`${s.name}: `, dim),
+				segment(s.instance.getFrame(), { color: "cyan" }),
+				segment("   ")
 			])
 		);
 
-		spinnerPrinter.print(block(spinnerLines));
+		livePrinter.print(block([bar, spinnerLine]));
 		await new Promise((resolve) => setTimeout(resolve, 50));
 	}
-	console.log("\n");
 
-	// ─── 7. ASCII Art Presets ───────────────────────────────────────────────────
-	// Pre-built ASCII art with customizable color gradients.
-
-	console.log("--- ASCII Presets ---\n");
-
-	const fireDragon = getDragon(GRADIENTS.fire);
-	const iceDragon = getDragon(GRADIENTS.ocean);
-	printColumns([fireDragon, iceDragon], { separator: "   ", printer });
-	console.log("");
-
-	// ─── 8. Render to String ────────────────────────────────────────────────────
-	// Capture styled output as a string — useful for logging, testing, or composing.
-
-	console.log("--- Render to String ---\n");
-
-	const capture = new Printer();
-	const rendered = capture.renderToString(
-		block([line([segment("Hello, styled world!", { color: "green", modifiers: ["bold"] })])])
-	);
-	const plain = stripAnsi(rendered);
-
-	printer.print(
-		block([
-			line([segment("Rendered length: ", { color: "#9CA3AF" }), segment(`${rendered.length} chars`, { color: "yellow" })]),
-			line([segment("Plain text:     ", { color: "#9CA3AF" }), segment(`"${plain.trim()}"`, { color: "green" })])
-		])
-	);
-
-	console.log("\n✨ Demo complete! See src/demo.ts for the source code.\n");
+	console.log("\n\nDemo complete! See src/demo.ts for the source code.\n");
 }

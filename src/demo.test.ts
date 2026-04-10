@@ -9,7 +9,6 @@ describe("Demo Script", () => {
 	const originalTimeout = global.setTimeout;
 
 	beforeEach(() => {
-		// Mocking setTimeout requires unknown casting due to return type mismatch in Bun (void vs Timer)
 		global.setTimeout = ((fn: () => void) => {
 			fn();
 		}) as unknown as typeof setTimeout;
@@ -30,10 +29,10 @@ describe("Demo Script", () => {
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Gradients"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Multi-Column Layouts"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Tables"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Progress Bar"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Spinners"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Gradient Presets"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("ASCII Presets"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Render to String"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Live Demo"));
 		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Demo complete!"));
 		expect(stdoutSpy).toHaveBeenCalled();
 	});
