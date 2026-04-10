@@ -1,13 +1,15 @@
 import { expect, test, describe } from "bun:test";
 import {
+	colorToHex,
 	hexToRgb,
 	rgbToAnsi,
+	rgbToBgAnsi,
 	resolveColorToAnsi,
+	resolveColorToRgb,
 	resolveModifiersToAnsi,
 	resolveStyle,
 	mergeStyles,
-	interpolateColor,
-	getGradientColor
+	interpolateGradient
 } from "./style";
 import { Color, PrintStyle } from "./types";
 
@@ -34,17 +36,9 @@ describe("Color Utilities", () => {
 		expect(resolveColorToAnsi("red")).toBe(`${ESC}[38;2;239;68;68m`); // Updated to Tailwind value
 	});
 
-	test("interpolateColor returns hex string for hex inputs", () => {
-		expect(interpolateColor("#000000", "#FFFFFF", 0.5)).toBe("#808080");
-	});
-
-	test("interpolateColor handles standard color names", () => {
-		expect(interpolateColor("black", "white", 0.5)).toBe("#808080");
-	});
-
-	test("interpolateColor clamps factors", () => {
-		expect(interpolateColor("black", "white", -1)).toBe("#000000");
-		expect(interpolateColor("black", "white", 2)).toBe("#ffffff");
+	test("resolveColorToRgb converts color to RGB object", () => {
+		expect(resolveColorToRgb("#FF0000")).toEqual({ r: 255, g: 0, b: 0 });
+		expect(resolveColorToRgb("green")).toEqual({ r: 16, g: 185, b: 129 }); // Tailwind value
 	});
 });
 
@@ -80,29 +74,6 @@ describe("Style Resolution", () => {
 	});
 });
 
-describe("Gradient Utilities", () => {
-	test("getGradientColor handles 2 colors", () => {
-		const colors: Color[] = ["#000000", "#FFFFFF"];
-		// 0 -> black
-		// 0.5 -> middle color (gray)
-		// 1 -> white
-		expect(getGradientColor(colors, 0)).toBe(`${ESC}[38;2;0;0;0m`);
-		expect(getGradientColor(colors, 0.5)).toBe(`${ESC}[38;2;128;128;128m`);
-		expect(getGradientColor(colors, 1)).toBe(`${ESC}[38;2;255;255;255m`);
-	});
-
-	test("getGradientColor handles 3 colors", () => {
-		const colors: Color[] = ["#000000", "#808080", "#FFFFFF"];
-		// 0 -> black
-		// 0.5 -> middle color (gray)
-		// 1 -> white
-		// 0.25 -> between black and gray
-		expect(getGradientColor(colors, 0)).toBe(`${ESC}[38;2;0;0;0m`);
-		expect(getGradientColor(colors, 0.5)).toBe(`${ESC}[38;2;128;128;128m`);
-		expect(getGradientColor(colors, 1)).toBe(`${ESC}[38;2;255;255;255m`);
-	});
-});
-
 describe("Style Merging", () => {
 	test("mergeStyles combines modifiers", () => {
 		const p: PrintStyle = { modifiers: ["bold"] };
@@ -131,5 +102,104 @@ describe("Style Merging", () => {
 		expect(mergeStyles(p, undefined)).toEqual(p);
 		expect(mergeStyles(undefined, p)).toEqual(p);
 		expect(mergeStyles(undefined, undefined)).toEqual({});
+	});
+});
+
+describe("interpolateGradient", () => {
+	test("returns fallback white for empty array", () => {
+		expect(interpolateGradient([], 0.5)).toBe("#FFFFFF");
+	});
+
+	test("returns the single color as hex for single-element array", () => {
+		expect(interpolateGradient(["#FF0000"], 0.5)).toBe("#FF0000");
+	});
+
+	test("returns the single standard color converted to hex", () => {
+		expect(interpolateGradient(["red"], 0.5)).toBe("#EF4444");
+	});
+
+	test("interpolates two colors at factor 0", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], 0)).toBe("#000000");
+	});
+
+	test("interpolates two colors at factor 0.5", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], 0.5)).toBe("#808080");
+	});
+
+	test("interpolates two colors at factor 1", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], 1)).toBe("#ffffff");
+	});
+
+	test("handles multi-stop gradient (3 colors)", () => {
+		const result = interpolateGradient(["#000000", "#808080", "#FFFFFF"], 0.25);
+		// 0.25 is halfway through the first segment (black to gray)
+		expect(result).toBe("#404040");
+	});
+
+	test("clamps negative factor to 0", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], -1)).toBe("#000000");
+	});
+
+	test("clamps factor > 1 to 1", () => {
+		expect(interpolateGradient(["#000000", "#FFFFFF"], 2)).toBe("#ffffff");
+	});
+
+	test("handles standard color names", () => {
+		// "red" is Tailwind Red-500 (#EF4444), factor 0 returns the first color
+		expect(interpolateGradient(["red", "blue"], 0)).toBe("#ef4444");
+	});
+});
+
+describe("Background Color", () => {
+	test("rgbToBgAnsi formats correctly", () => {
+		expect(rgbToBgAnsi(255, 0, 0)).toBe(`${ESC}[48;2;255;0;0m`);
+	});
+
+	test("resolveStyle handles solid bgColor", () => {
+		const style: PrintStyle = { bgColor: "blue" };
+		expect(resolveStyle(style)).toContain("48;2;");
+	});
+
+	test("resolveStyle handles bgColor + color together", () => {
+		const style: PrintStyle = { color: "red", bgColor: "blue" };
+		const result = resolveStyle(style);
+		expect(result).toContain("38;2;"); // foreground
+		expect(result).toContain("48;2;"); // background
+	});
+
+	test("resolveStyle handles bgColor gradient", () => {
+		const style: PrintStyle = { bgColor: ["#000000", "#FFFFFF"] };
+		expect(resolveStyle(style, 0)).toContain("48;2;0;0;0");
+	});
+
+	test("mergeStyles cascades bgColor (child overrides parent)", () => {
+		const p: PrintStyle = { bgColor: "red" };
+		const c: PrintStyle = { bgColor: "blue" };
+		const merged = mergeStyles(p, c);
+		expect(merged.bgColor).toBe("blue");
+	});
+
+	test("mergeStyles inherits parent bgColor if child has none", () => {
+		const p: PrintStyle = { bgColor: "red" };
+		const c: PrintStyle = { color: "green" };
+		const merged = mergeStyles(p, c);
+		expect(merged.bgColor).toBe("red");
+	});
+});
+
+describe("Style Security", () => {
+	test("colorToHex should not crash with 'constructor'", () => {
+		// Verify prevention of prototype pollution crashes (DoS).
+		// colorToHex uses dictionary lookups that must safely handle "constructor".
+		const dangerousInput = "constructor";
+		const result = colorToHex(dangerousInput as unknown as Color);
+		// Should return fallback white (#FFFFFF), not crash or return a function.
+		expect(result).toBe("#FFFFFF");
+	});
+
+	test("resolveColorToAnsi should not crash with 'constructor'", () => {
+		const dangerousInput = "constructor";
+		// Verify full resolution pipeline is safe against property masking.
+		expect(() => resolveColorToAnsi(dangerousInput as unknown as Color)).not.toThrow();
 	});
 });

@@ -9,7 +9,6 @@ describe("Demo Script", () => {
 	const originalTimeout = global.setTimeout;
 
 	beforeEach(() => {
-		// Mocking setTimeout requires unknown casting due to return type mismatch in Bun (void vs Timer)
 		global.setTimeout = ((fn: () => void) => {
 			fn();
 		}) as unknown as typeof setTimeout;
@@ -22,13 +21,19 @@ describe("Demo Script", () => {
 		global.setTimeout = originalTimeout;
 	});
 
-	test("runDemo executes correctly", async () => {
-		// Just await the function call; we expect it not to throw.
+	test("runDemo executes all sections without errors", async () => {
 		await runDemo();
 
 		expect(clearSpy).toHaveBeenCalled();
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Static Dual Column Demo"));
-		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Demo Complete!"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Colors & Modifiers"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Gradients"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Multi-Column Layouts"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Tables"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Gradient Presets"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("ASCII Presets"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Render to String"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Live Demo"));
+		expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Demo complete!"));
 		expect(stdoutSpy).toHaveBeenCalled();
 	});
 });

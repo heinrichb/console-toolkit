@@ -10,7 +10,7 @@ export type StandardColor = "black" | "red" | "green" | "yellow" | "blue" | "mag
 /**
  * Text style modifiers.
  */
-export type StyleModifier = "bold" | "dim" | "italic" | "underline" | "default" | "hidden" | "inverse" | "strikethrough";
+export type StyleModifier = "bold" | "dim" | "italic" | "underline" | "hidden" | "inverse" | "strikethrough";
 
 /**
  * A valid Hex color string (e.g., "#FF0000").
@@ -23,6 +23,15 @@ export type HexColor = `#${string}`;
 export type Color = StandardColor | HexColor;
 
 /**
+ * Represents an RGB color value.
+ */
+export interface RGB {
+	r: number;
+	g: number;
+	b: number;
+}
+
+/**
  * Represents the style configuration for a text segment, line, or block.
  */
 export interface PrintStyle {
@@ -32,6 +41,13 @@ export interface PrintStyle {
 	 * - An array of colors applies a gradient.
 	 */
 	color?: Color | Color[];
+
+	/**
+	 * The background color to apply.
+	 * - A single color (string) applies a solid background.
+	 * - An array of colors applies a background gradient.
+	 */
+	bgColor?: Color | Color[];
 
 	/**
 	 * A list of style modifiers (e.g., bold, italic) to apply.

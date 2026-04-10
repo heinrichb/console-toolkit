@@ -1,7 +1,17 @@
 import { Color, PrintBlock, PrinterOptions, PrintLine, PrintStyle } from "./types";
-import { getGradientColor, mergeStyles, resolveStyle, RESET, interpolateColor, resolveModifiersToAnsi } from "./style";
-
-const ESC = "\x1b";
+import {
+	ESC,
+	getGradientColorFromRgb,
+	getGradientBgColorFromRgb,
+	rgbToAnsi,
+	rgbToBgAnsi,
+	resolveColorToRgb,
+	mergeStyles,
+	resolveStyle,
+	RESET,
+	interpolateGradient,
+	resolveModifiersToAnsi
+} from "./style";
 
 /**
  * Handles rendering PrintBlocks to the terminal with support for interactive/live overwriting.
@@ -35,6 +45,21 @@ export class Printer {
 	}
 
 	/**
+	 * Renders a PrintBlock to a string without writing to stdout or affecting live mode state.
+	 * Useful for capturing output, testing, or composing before display.
+	 *
+	 * @param data - Optional data to update the printer with.
+	 * @returns The rendered ANSI string.
+	 */
+	public renderToString(data?: PrintBlock): string {
+		if (data) {
+			this.data = data;
+		}
+		if (!this.data) return "";
+		return this.renderBlock(this.data);
+	}
+
+	/**
 	 * Renders the PrintBlock to the standard output.
 	 * If data is provided, updates the internal state.
 	 *
@@ -46,86 +71,92 @@ export class Printer {
 		}
 
 		if (!this.data) {
-			return; // Nothing to print
+			return;
 		}
 
-		let output = this.getClearSequence();
-		const lines = this.data.lines;
-		const blockStyle = this.data.style ?? {};
-
-		lines.forEach((line, lineIndex) => {
-			output += this.renderLine(line, lineIndex, lines.length, blockStyle);
-			output += "\n";
-		});
-
+		const output = this.getClearSequence() + this.renderBlock(this.data);
 		process.stdout.write(output);
-		this.linesRendered = lines.length;
+		this.linesRendered = this.data.lines.length;
 	}
 
 	/**
-	 * Resolves the block's vertical gradient (if any) to a solid color for the specific line.
+	 * Shared rendering core — builds the ANSI output string for a PrintBlock.
 	 */
-	private resolveBlockColorForLine(blockStyle: PrintStyle, lineIndex: number, totalLines: number): Color | undefined {
-		if (!blockStyle.color) return undefined;
+	private renderBlock(blockData: PrintBlock): string {
+		let output = "";
+		const lines = blockData.lines;
+		const blockStyle = blockData.style ?? {};
+		lines.forEach((ln, lineIndex) => {
+			output += this.renderLine(ln, lineIndex, lines.length, blockStyle);
+			output += "\n";
+		});
+		return output;
+	}
 
-		if (Array.isArray(blockStyle.color)) {
-			// Vertical Gradient
-			if (totalLines <= 1) return blockStyle.color[0]; // Single line, use first color
+	/**
+	 * Resolves the block's vertical gradients (color and bgColor) to solid colors for a specific line.
+	 */
+	private resolveBlockStyleForLine(blockStyle: PrintStyle, lineIndex: number, totalLines: number): PrintStyle {
+		return {
+			modifiers: blockStyle.modifiers,
+			color: this.resolveGradientForLine(blockStyle.color, lineIndex, totalLines),
+			bgColor: this.resolveGradientForLine(blockStyle.bgColor, lineIndex, totalLines)
+		};
+	}
 
-			const colors = blockStyle.color;
-			const factor = lineIndex / (totalLines - 1);
-
-			// Interpolate manually to obtain Hex Color
-			const f = Math.max(0, Math.min(1, factor));
-			const segmentLength = 1 / (colors.length - 1);
-			const segmentIndex = Math.min(Math.floor(f / segmentLength), colors.length - 2);
-			const segmentFactor = (f - segmentIndex * segmentLength) / segmentLength;
-
-			const c1 = colors[segmentIndex];
-			const c2 = colors[segmentIndex + 1];
-
-			return interpolateColor(c1, c2, segmentFactor);
+	/**
+	 * Resolves a single color/gradient value to a solid color for a specific line position.
+	 */
+	private resolveGradientForLine(color: Color | Color[] | undefined, lineIndex: number, totalLines: number): Color | undefined {
+		if (!color) return undefined;
+		if (Array.isArray(color)) {
+			if (totalLines <= 1) return color[0];
+			return interpolateGradient(color, lineIndex / (totalLines - 1));
 		}
-
-		return blockStyle.color;
+		return color;
 	}
 
 	/**
 	 * Renders a single line.
 	 */
 	private renderLine(line: PrintLine, lineIndex: number, totalLines: number, parentBlockStyle: PrintStyle): string {
-		// 1. Resolve Block Gradient to Solid Color for this line
-		const blockColorForLine = this.resolveBlockColorForLine(parentBlockStyle, lineIndex, totalLines);
-
-		// 2. Create Base Line Style (Block Modifiers + Resolved Block Color)
-		const baseLineStyle: PrintStyle = {
-			modifiers: parentBlockStyle.modifiers,
-			color: blockColorForLine
-		};
-
-		// 3. Merge with Line's own style
-		// If line.style has color, it overrides baseLineStyle.color
+		const baseLineStyle = this.resolveBlockStyleForLine(parentBlockStyle, lineIndex, totalLines);
 		const effectiveLineStyle = mergeStyles(baseLineStyle, line.style);
 
-		// 4. Pre-calculate total chars for horizontal gradients
 		const totalChars = line.segments.reduce((acc, seg) => acc + seg.text.length, 0);
 		let currentCharIndex = 0;
 		let lineOutput = "";
 
 		line.segments.forEach((seg) => {
 			const effectiveSegmentStyle = mergeStyles(effectiveLineStyle, seg.style);
+			const hasFgGradient = Array.isArray(effectiveSegmentStyle.color);
+			const hasBgGradient = Array.isArray(effectiveSegmentStyle.bgColor);
 
-			if (Array.isArray(effectiveSegmentStyle.color)) {
-				// Gradient Handling (Horizontal)
-				const colors = effectiveSegmentStyle.color;
+			if (hasFgGradient || hasBgGradient) {
+				// Per-character gradient path — handles any combination of fg/bg gradients
 				const text = seg.text;
-
-				// Determine if we are using the Line's gradient (Global) or Segment's gradient (Local)
-				// If effectiveSegmentStyle.color === effectiveLineStyle.color, it's inherited (Global)
-				// Otherwise it's the segment's own gradient (Local)
 				const isGlobalGradient = effectiveSegmentStyle.color === effectiveLineStyle.color;
 
-				// Iterate characters to apply gradient
+				// Pre-resolve foreground colors
+				let fgRgbColors: ReturnType<typeof resolveColorToRgb>[] | undefined;
+				let solidFgAnsi = "";
+				if (hasFgGradient) {
+					fgRgbColors = (effectiveSegmentStyle.color as Color[]).map(resolveColorToRgb);
+				} else if (effectiveSegmentStyle.color) {
+					const { r, g, b } = resolveColorToRgb(effectiveSegmentStyle.color as Color);
+					solidFgAnsi = rgbToAnsi(r, g, b);
+				}
+
+				// Pre-resolve background colors
+				let bgRgbColors: ReturnType<typeof resolveColorToRgb>[] | undefined;
+				let solidBgAnsi = "";
+				if (hasBgGradient) {
+					bgRgbColors = (effectiveSegmentStyle.bgColor as Color[]).map(resolveColorToRgb);
+				} else if (effectiveSegmentStyle.bgColor) {
+					const { r, g, b } = resolveColorToRgb(effectiveSegmentStyle.bgColor as Color);
+					solidBgAnsi = rgbToBgAnsi(r, g, b);
+				}
+
 				const modifiersAnsi = resolveModifiersToAnsi(effectiveSegmentStyle.modifiers);
 
 				for (let i = 0; i < text.length; i++) {
@@ -136,12 +167,13 @@ export class Printer {
 						factor = i / (text.length - 1);
 					}
 
-					const colorAnsi = getGradientColor(colors, factor); // Returns ANSI Color Code
-					lineOutput += `${modifiersAnsi}${colorAnsi}${text[i]}`;
+					const fgAnsi = fgRgbColors ? getGradientColorFromRgb(fgRgbColors, factor) : solidFgAnsi;
+					const bgAnsi = bgRgbColors ? getGradientBgColorFromRgb(bgRgbColors, factor) : solidBgAnsi;
+					lineOutput += `${modifiersAnsi}${fgAnsi}${bgAnsi}${text[i]}`;
 				}
 				lineOutput += RESET;
 			} else {
-				// Solid Color Handling
+				// Solid path — resolveStyle handles both color and bgColor
 				const ansi = resolveStyle(effectiveSegmentStyle);
 				lineOutput += `${ansi}${seg.text}${RESET}`;
 			}

@@ -102,4 +102,25 @@ describe("createProgressBar", () => {
 		const resultHigh = createProgressBar({ progress: 2 });
 		expect(resultHigh.segments.map((s) => s.text).join("")).toContain("100%");
 	});
+
+	test("applies completeStyle and completeChar when progress >= 1", () => {
+		const completeStyle: PrintStyle = { color: "green" };
+		const completeChar = "✔";
+
+		// Not complete
+		const resultIncomplete = createProgressBar({ progress: 0.5, completeStyle, completeChar });
+		const fullTextIncomplete = resultIncomplete.segments.map((s) => s.text).join("");
+		expect(fullTextIncomplete).not.toContain("✔");
+
+		const filledSegIncomplete = resultIncomplete.segments.find((s) => s.text.includes("█"));
+		expect(filledSegIncomplete?.style).not.toEqual(completeStyle);
+
+		// Complete
+		const resultComplete = createProgressBar({ progress: 1, completeStyle, completeChar });
+		const fullTextComplete = resultComplete.segments.map((s) => s.text).join("");
+		expect(fullTextComplete).toContain("✔");
+
+		const filledSegComplete = resultComplete.segments.find((s) => s.text.includes("✔"));
+		expect(filledSegComplete?.style).toEqual(completeStyle);
+	});
 });

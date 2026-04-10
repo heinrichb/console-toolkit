@@ -46,6 +46,18 @@ export interface ProgressBarOptions {
 	fillStyle?: PrintStyle;
 
 	/**
+	 * Style to apply to the filled part when progress reaches 100%.
+	 * Overrides `fillStyle`.
+	 */
+	completeStyle?: PrintStyle;
+
+	/**
+	 * Character to use for the filled part when progress reaches 100%.
+	 * Overrides `fillChar`.
+	 */
+	completeChar?: string;
+
+	/**
 	 * Specific style for the empty part. Overrides `barStyle`.
 	 */
 	emptyStyle?: PrintStyle;
@@ -105,7 +117,9 @@ export function createProgressBar(options: ProgressBarOptions): PrintLine {
 		startChar = "[",
 		endChar = "]",
 		fillChar = "█",
+		completeChar,
 		emptyChar = "░",
+		completeStyle,
 		showPercentage = true,
 		formatPercentage
 	} = options;
@@ -123,7 +137,8 @@ export function createProgressBar(options: ProgressBarOptions): PrintLine {
 	const resolvedEndStyle = endStyle ?? resolvedBracketStyle;
 
 	const resolvedBarStyle = barStyle ?? style;
-	const resolvedFillStyle = fillStyle ?? resolvedBarStyle;
+	const isComplete = p >= 1;
+	const resolvedFillStyle = isComplete ? (completeStyle ?? fillStyle ?? resolvedBarStyle) : (fillStyle ?? resolvedBarStyle);
 	const resolvedEmptyStyle = emptyStyle ?? resolvedBarStyle;
 
 	const resolvedPercentageStyle = percentageStyle ?? style;
@@ -135,9 +150,11 @@ export function createProgressBar(options: ProgressBarOptions): PrintLine {
 		segments.push(segment(startChar, resolvedStartStyle));
 	}
 
+	const effectiveFillChar = isComplete ? (completeChar ?? fillChar) : fillChar;
+
 	// Filled Part
 	if (filledWidth > 0) {
-		segments.push(segment(fillChar.repeat(filledWidth), resolvedFillStyle));
+		segments.push(segment(effectiveFillChar.repeat(filledWidth), resolvedFillStyle));
 	}
 
 	// Empty Part

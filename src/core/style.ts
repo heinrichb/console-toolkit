@@ -1,16 +1,20 @@
-import { Color, HexColor, PrintStyle, StandardColor, StyleModifier } from "./types";
+import { Color, HexColor, PrintStyle, StandardColor, StyleModifier, RGB } from "./types";
 
 // -----------------
 // Color Utilities
 // -----------------
 
-const ESC = "\x1b";
+export const ESC = "\x1b";
 /**
  * ANSI escape sequence to reset all styles.
  */
 export const RESET = `${ESC}[0m`;
 
-const STANDARD_COLORS: Record<StandardColor, string> = {
+/**
+ * Standard ANSI color codes.
+ * Initialized with Object.create(null) to prevent prototype pollution.
+ */
+const STANDARD_COLORS: Record<StandardColor, string> = Object.assign(Object.create(null), {
 	black: "#000000",
 	red: "#EF4444", // Tailwind Red-500
 	green: "#10B981", // Tailwind Emerald-500
@@ -21,10 +25,13 @@ const STANDARD_COLORS: Record<StandardColor, string> = {
 	white: "#FFFFFF",
 	gray: "#6B7280", // Tailwind Gray-500
 	grey: "#6B7280"
-};
+});
 
-const MODIFIER_CODES: Record<StyleModifier, string> = {
-	default: "0",
+/**
+ * ANSI codes for text modifiers.
+ * Initialized with Object.create(null) to prevent prototype pollution.
+ */
+const MODIFIER_CODES: Record<StyleModifier, string> = Object.assign(Object.create(null), {
 	bold: "1",
 	dim: "2",
 	italic: "3",
@@ -32,7 +39,7 @@ const MODIFIER_CODES: Record<StyleModifier, string> = {
 	inverse: "7",
 	hidden: "8",
 	strikethrough: "9"
-};
+});
 
 /**
  * Converts any Color (hex or standard name) to a Hex string.
@@ -47,7 +54,7 @@ export function colorToHex(color: Color): string {
 /**
  * Converts a hex color string to an RGB object.
  */
-export function hexToRgb(hex: string): { r: number; g: number; b: number } {
+export function hexToRgb(hex: string): RGB {
 	const h = hex.replace(/^#/, "");
 	if (h.length !== 6) return { r: 255, g: 255, b: 255 }; // Fallback for invalid hex
 	return {
@@ -65,12 +72,26 @@ export function rgbToAnsi(r: number, g: number, b: number): string {
 }
 
 /**
+ * Converts RGB to a 24-bit ANSI background color escape sequence.
+ */
+export function rgbToBgAnsi(r: number, g: number, b: number): string {
+	return `${ESC}[48;2;${r};${g};${b}m`;
+}
+
+/**
  * Converts any Color to an ANSI escape sequence.
  */
 export function resolveColorToAnsi(color: Color): string {
-	const hex = colorToHex(color);
-	const { r, g, b } = hexToRgb(hex);
+	const { r, g, b } = resolveColorToRgb(color);
 	return rgbToAnsi(r, g, b);
+}
+
+/**
+ * Resolves a Color (Standard or Hex) to an RGB object.
+ */
+export function resolveColorToRgb(color: Color): RGB {
+	const hex = colorToHex(color);
+	return hexToRgb(hex);
 }
 
 /**
@@ -108,32 +129,60 @@ export function interpolateHex(color1: string, color2: string, factor: number): 
 }
 
 /**
- * Public interpolation function that accepts any Color type.
+ * Computes the segment index and interpolation factor for a multi-stop gradient.
+ * Shared by all gradient functions to avoid duplicating the segment math.
  */
-export function interpolateColor(color1: Color, color2: Color, factor: number): HexColor {
-	return interpolateHex(colorToHex(color1), colorToHex(color2), factor) as HexColor;
+function gradientSegment(colorCount: number, factor: number): { index: number; factor: number } {
+	const f = Math.max(0, Math.min(1, factor));
+	const segmentLength = 1 / (colorCount - 1);
+	const index = Math.min(Math.floor(f / segmentLength), colorCount - 2);
+	return { index, factor: (f - index * segmentLength) / segmentLength };
 }
 
 /**
- * logic to get a specific color from a multi-stop gradient array at a specific factor (0-1).
+ * Shared gradient-to-ANSI conversion for pre-resolved RGB colors.
+ * Used by both foreground and background gradient hot paths.
  */
-export function getGradientColor(colors: Color[], factor: number): string {
+function getGradientAnsiFromRgb(colors: RGB[], factor: number, toAnsi: (r: number, g: number, b: number) => string): string {
 	if (colors.length === 0) return "";
-	if (colors.length === 1) return resolveColorToAnsi(colors[0]);
+	if (colors.length === 1) return toAnsi(colors[0].r, colors[0].g, colors[0].b);
 
-	const f = Math.max(0, Math.min(1, factor));
-	// Map factor to segments between colors
-	// e.g. 3 colors: [0, 0.5, 1]. factor 0.25 is in first segment (0.5 of way through)
-	const segmentLength = 1 / (colors.length - 1);
+	const seg = gradientSegment(colors.length, factor);
+	const c1 = colors[seg.index];
+	const c2 = colors[seg.index + 1];
 
-	const segmentIndex = Math.min(Math.floor(f / segmentLength), colors.length - 2);
-	const segmentFactor = (f - segmentIndex * segmentLength) / segmentLength;
+	const r = Math.round(c1.r + seg.factor * (c2.r - c1.r));
+	const g = Math.round(c1.g + seg.factor * (c2.g - c1.g));
+	const b = Math.round(c1.b + seg.factor * (c2.b - c1.b));
 
-	const c1 = colors[segmentIndex];
-	const c2 = colors[segmentIndex + 1];
+	return toAnsi(r, g, b);
+}
 
-	const hex = interpolateColor(c1, c2, segmentFactor);
-	return resolveColorToAnsi(hex);
+/**
+ * Gets a foreground color from a multi-stop gradient as an ANSI escape sequence.
+ * Uses pre-resolved RGB colors for performance in per-character hot paths.
+ */
+export function getGradientColorFromRgb(colors: RGB[], factor: number): string {
+	return getGradientAnsiFromRgb(colors, factor, rgbToAnsi);
+}
+
+/**
+ * Gets a background color from a multi-stop gradient as an ANSI escape sequence.
+ * Uses pre-resolved RGB colors for performance in per-character hot paths.
+ */
+export function getGradientBgColorFromRgb(colors: RGB[], factor: number): string {
+	return getGradientAnsiFromRgb(colors, factor, rgbToBgAnsi);
+}
+
+/**
+ * Interpolates a multi-stop gradient at a given factor (0-1), returning a HexColor.
+ * Useful for computing vertical gradient colors per-line or for any custom gradient logic.
+ */
+export function interpolateGradient(colors: Color[], factor: number): HexColor {
+	if (colors.length === 0) return "#FFFFFF" as HexColor;
+	if (colors.length === 1) return colorToHex(colors[0]) as HexColor;
+	const seg = gradientSegment(colors.length, factor);
+	return interpolateHex(colorToHex(colors[seg.index]), colorToHex(colors[seg.index + 1]), seg.factor) as HexColor;
 }
 
 // -----------------
@@ -150,11 +199,17 @@ export function mergeStyles(parent?: PrintStyle, child?: PrintStyle): PrintStyle
 	if (!parent) return child ?? {};
 	if (!child) return parent;
 
-	const mergedModifiers = Array.from(new Set([...(parent.modifiers ?? []), ...(child.modifiers ?? [])]));
+	const parentMods = parent.modifiers ?? [];
+	const childMods = child.modifiers ?? [];
+	const mergedModifiers: StyleModifier[] = [...parentMods];
+	for (const mod of childMods) {
+		if (!mergedModifiers.includes(mod)) mergedModifiers.push(mod);
+	}
 
 	return {
 		modifiers: mergedModifiers,
-		color: child.color ?? parent.color
+		color: child.color ?? parent.color,
+		bgColor: child.bgColor ?? parent.bgColor
 	};
 }
 
@@ -174,12 +229,20 @@ export function resolveStyle(style?: PrintStyle, gradientFactor = 0): string {
 
 	if (style.color) {
 		if (Array.isArray(style.color)) {
-			// Gradient
-			const hex = getGradientColor(style.color, gradientFactor);
-			ansi += hex;
+			const rgbColors = style.color.map(resolveColorToRgb);
+			ansi += getGradientColorFromRgb(rgbColors, gradientFactor);
 		} else {
-			// Solid
 			ansi += resolveColorToAnsi(style.color);
+		}
+	}
+
+	if (style.bgColor) {
+		if (Array.isArray(style.bgColor)) {
+			const bgRgbColors = style.bgColor.map(resolveColorToRgb);
+			ansi += getGradientBgColorFromRgb(bgRgbColors, gradientFactor);
+		} else {
+			const { r, g, b } = resolveColorToRgb(style.bgColor);
+			ansi += rgbToBgAnsi(r, g, b);
 		}
 	}
 

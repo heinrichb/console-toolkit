@@ -25,7 +25,7 @@ export function mergeColumns(
 ): PrintLine[] {
 	if (columns.length === 0) return [];
 
-	const maxLines = Math.max(...columns.map((c) => c.length));
+	const maxLines = columns.reduce((max, c) => Math.max(max, c.length), 0);
 	const colWidths = columns.map((col, i) => {
 		if (widths?.[i] !== undefined) return widths[i];
 		return computeMaxWidth(col);
@@ -34,17 +34,15 @@ export function mergeColumns(
 	const output: PrintLine[] = [];
 
 	for (let i = 0; i < maxLines; i++) {
-		let segments: PrintSegment[] = [];
+		const segments: PrintSegment[] = [];
 		for (let j = 0; j < columns.length; j++) {
 			const currentLine = columns[j][i] || line();
 
-			// If not the last column, pad it
 			if (j < columns.length - 1) {
 				const padded = padLine(currentLine, colWidths[j], defaultStyle);
-				segments = [...segments, ...padded.segments, segment(separator, defaultStyle)];
+				segments.push(...padded.segments, segment(separator, defaultStyle));
 			} else {
-				// Last column, just add segments
-				segments = [...segments, ...currentLine.segments];
+				segments.push(...currentLine.segments);
 			}
 		}
 		output.push(line(segments));
@@ -61,9 +59,9 @@ export function mergeColumns(
  */
 export function printColumns(
 	columns: PrintLine[][],
-	options: { widths?: number[]; separator?: string; printer?: Printer } = {}
+	options: { widths?: number[]; separator?: string; defaultStyle?: PrintStyle; printer?: Printer } = {}
 ): void {
-	const { widths, separator = "     ", printer = new Printer() } = options;
-	const mergedLines = mergeColumns(columns, separator, undefined, widths);
+	const { widths, separator = "     ", defaultStyle, printer = new Printer() } = options;
+	const mergedLines = mergeColumns(columns, separator, defaultStyle, widths);
 	printer.print(block(mergedLines));
 }
