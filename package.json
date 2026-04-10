@@ -1,6 +1,6 @@
 {
 	"name": "@heinrichb/console-toolkit",
-	"version": "1.0.10",
+	"version": "1.0.11",
 	"description": "A versatile TypeScript utility library for enhanced console logging, formatting, and layout management.",
 	"type": "module",
 	"main": "./dist/index.js",
